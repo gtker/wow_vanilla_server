@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wow_world_base = { path = "../wow_messages/wow_world_base" }
+wow_world_base = { path = "../../wow_messages/wow_world_base" }

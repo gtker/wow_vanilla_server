@@ -25,7 +25,7 @@ use wow_world_messages::vanilla::{
     SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::vanilla::{UpdateMask, UpdatePlayer};
-use wow_world_messages::Guid;
+use wow_world_messages::{DateTime, Guid};
 
 #[derive(Debug)]
 pub struct World {
@@ -127,9 +127,10 @@ impl World {
 
 pub fn get_self_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OBJECT {
     let mut m = get_update_object_create_object2(character);
+
     match &mut m.objects[0].update_type {
         Object_UpdateType::CreateObject2 { movement2, .. } => {
-            movement2.update_flag = movement2.update_flag.set_SELF();
+            movement2.update_flag = movement2.update_flag.clone().set_SELF();
         }
         _ => unreachable!(),
     }
@@ -218,12 +219,14 @@ pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage;
     let minute = 10;
     v.push(ServerOpcodeMessage::SMSG_LOGIN_SETTIMESPEED(
         SMSG_LOGIN_SETTIMESPEED {
-            datetime: year << 24
-                | month << 20
-                | month_day << 14
-                | week_day << 11
-                | hour << 6
-                | minute,
+            datetime: DateTime::new(
+                year,
+                month.try_into().unwrap(),
+                month_day,
+                week_day.try_into().unwrap(),
+                hour,
+                minute,
+            ),
             timescale: 1.0 / 60.0,
         },
     ));
@@ -242,14 +245,10 @@ pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage;
 
     v.push(ServerOpcodeMessage::SMSG_TUTORIAL_FLAGS(
         SMSG_TUTORIAL_FLAGS {
-            tutorial_data0: 0xFFFFFFFF,
-            tutorial_data1: 0xFFFFFFFF,
-            tutorial_data2: 0xFFFFFFFF,
-            tutorial_data3: 0xFFFFFFFF,
-            tutorial_data4: 0xFFFFFFFF,
-            tutorial_data5: 0xFFFFFFFF,
-            tutorial_data6: 0xFFFFFFFF,
-            tutorial_data7: 0xFFFFFFFF,
+            tutorial_data: [
+                0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+                0xFFFFFFFF,
+            ],
         },
     ));
 

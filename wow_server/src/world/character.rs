@@ -91,7 +91,7 @@ impl From<Character> for wow_world_messages::vanilla::Character {
             position: e.info.position,
             guild_id: 0,
             flags: CharacterFlags::empty(),
-            first_login: 0,
+            first_login: false,
             pet_display_id: 0,
             pet_level: 0,
             pet_family: 0,

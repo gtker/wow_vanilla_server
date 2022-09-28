@@ -1,0 +1,2 @@
+[workspace]
+members = ["wow_server", "wow_vanilla_common"]

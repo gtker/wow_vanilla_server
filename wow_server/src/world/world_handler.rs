@@ -15,16 +15,16 @@ use wow_vanilla_common::{
     Map, DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED,
 };
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
+use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
     Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock, MovementBlock_MovementFlags,
     MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo,
     MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
-    SMSG_MESSAGECHAT_ChatType, Vector3d, SMSG_ACCOUNT_DATA_TIMES, SMSG_DESTROY_OBJECT,
-    SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD,
-    SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING,
-    SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
+    SMSG_MESSAGECHAT_ChatType, UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES,
+    SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_LOGIN_SETTIMESPEED,
+    SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
+    SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
-use wow_world_messages::vanilla::{UpdateMask, UpdatePlayer};
 use wow_world_messages::{DateTime, Guid};
 
 #[derive(Debug)]
@@ -170,7 +170,7 @@ pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OB
 
 fn get_update_object_player(character: &Character) -> UpdateMask {
     UpdateMask::Player(
-        UpdatePlayer::new()
+        UpdatePlayerBuilder::new()
             .set_object_GUID(character.guid)
             .set_object_SCALE_X(get_race_scale(character.race, character.gender))
             .set_unit_BYTES_0(
@@ -198,7 +198,8 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
             .set_unit_FACTIONTEMPLATE(get_race_faction(character.race))
             .set_unit_DISPLAYID(get_display_id_for_player(character.race, character.gender))
             .set_unit_NATIVEDISPLAYID(get_display_id_for_player(character.race, character.gender))
-            .set_unit_TARGET(character.target),
+            .set_unit_TARGET(character.target)
+            .finalize(),
     )
 }
 

@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wow_world_base = { git="https://github.com/gtker/wow_messages.git", rev = "ee259c93f02895e8c60e3d214d6e6e2c72e9b045" }
+wow_world_base = { git="https://github.com/gtker/wow_messages.git", rev = "fe8c802f68b40786efaa312a6d9dc5b175c493f8" }

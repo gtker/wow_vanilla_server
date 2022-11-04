@@ -57,10 +57,10 @@ impl Client {
                     Ok(m) => m,
                     Err(e) => {
                         match e {
-                            ExpectedOpcodeError::Opcode { opcode, size } => {
+                            ExpectedOpcodeError::Opcode { opcode, size, name } => {
                                 let mut v = vec![0_u8; size as usize];
                                 read.read_exact(&mut v).await.unwrap();
-                                dbg!(opcode, size, v);
+                                dbg!(name, opcode, size, v);
                             }
                             ExpectedOpcodeError::Parse(ref p) => match p {
                                 ParseError::Io(i) => match i.kind() {

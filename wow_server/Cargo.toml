@@ -8,6 +8,6 @@ edition = "2021"
 [dependencies]
 tokio = {version = "1.18.2", features = ["full"]}
 wow_login_messages = { git="https://github.com/gtker/wow_messages.git", rev = "5e454e7e0a68b54d5c88253c357674d8fb899c5b", features = ["tokio"] }
-wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "5e454e7e0a68b54d5c88253c357674d8fb899c5b", features = ["tokio", "wrath"] }
+wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "5e454e7e0a68b54d5c88253c357674d8fb899c5b", features = ["tokio", "vanilla"] }
 wow_srp = "0.5.3"
 wow_vanilla_common = { path = "../wow_vanilla_common" }

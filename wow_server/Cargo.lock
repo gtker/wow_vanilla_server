@@ -346,7 +346,7 @@ dependencies = [
  "tokio",
  "wow_login_messages",
  "wow_srp",
- "wow_vanilla_common",
+ "wow_common",
  "wow_world_messages",
 ]
 
@@ -524,7 +524,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wow_vanilla_common"
+name = "wow_common"
 version = "0.1.0"
 dependencies = [
  "wow_world_base",

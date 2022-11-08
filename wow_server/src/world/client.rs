@@ -6,13 +6,13 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
+use wow_common::range::distance_between;
+use wow_common::vanilla::position::Position;
 use wow_srp::vanilla_header::{EncrypterHalf, HeaderCrypto};
-use wow_vanilla_common::position::Position;
-use wow_vanilla_common::range::distance_to_center;
 use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
 use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::vanilla::{
-    Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, SMSG_MESSAGECHAT,
+    Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d, SMSG_MESSAGECHAT,
 };
 use wow_world_messages::Guid;
 
@@ -156,8 +156,17 @@ impl Client {
         let (other_x, other_y, other_z) = other.coordinates();
 
         if self.character().map == other.character().map {
-            Some(distance_to_center(
-                self_x, self_y, self_z, other_x, other_y, other_z,
+            Some(distance_between(
+                Vector3d {
+                    x: self_x,
+                    y: self_y,
+                    z: self_z,
+                },
+                Vector3d {
+                    x: other_x,
+                    y: other_y,
+                    z: other_z,
+                },
             ))
         } else {
             None

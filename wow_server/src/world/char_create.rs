@@ -1,12 +1,12 @@
 use crate::world::character::Character;
 use crate::world::database::WorldDatabase;
-use wow_vanilla_common::position::get_starting_position;
-use wow_vanilla_common::DEFAULT_RUNNING_SPEED;
+use wow_common::vanilla::position::get_starting_position;
+use wow_common::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::vanilla::{Area, MovementInfo, Vector3d, CMSG_CHAR_CREATE};
 use wow_world_messages::Guid;
 
 pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Character {
-    let start_zone = get_starting_position(c.race);
+    let start_zone = get_starting_position(c.race.try_into().unwrap());
 
     Character {
         guid: db.new_guid().into(),

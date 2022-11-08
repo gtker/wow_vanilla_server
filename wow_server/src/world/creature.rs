@@ -1,5 +1,5 @@
-use wow_vanilla_common::position::{get_position, PositionIdentifier};
-use wow_vanilla_common::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
+use wow_common::vanilla::position::{get_position, PositionIdentifier};
+use wow_common::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
     MovementBlock, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo, Object,

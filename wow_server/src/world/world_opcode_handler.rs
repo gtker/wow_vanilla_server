@@ -5,7 +5,7 @@ use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use crate::world::world_handler::announce_character_login;
 use std::time::SystemTime;
-use wow_vanilla_common::position::{get_position_from_str, Position};
+use wow_common::vanilla::position::{get_position_from_str, Position};
 use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::vanilla::{
     LogoutResult, LogoutSpeed, MSG_MOVE_FALL_LAND_Server, MSG_MOVE_HEARTBEAT_Server,

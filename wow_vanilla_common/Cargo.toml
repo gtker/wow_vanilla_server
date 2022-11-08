@@ -1,7 +1,0 @@
-[package]
-name = "wow_vanilla_common"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-wow_world_base = { git="https://github.com/gtker/wow_messages.git", rev = "ee10ee8ae4382e313bf433f4a85e7a2848d2ff98" }

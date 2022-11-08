@@ -1,8 +1,9 @@
 use crate::world::character::Character;
 use std::sync::Arc;
 use std::sync::Mutex;
-use wow_vanilla_common::position::{get_position, PositionIdentifier};
-use wow_vanilla_common::{Class, Race, DEFAULT_RUNNING_SPEED};
+use wow_common::vanilla::position::{get_position, PositionIdentifier};
+use wow_common::vanilla::{Class, Race};
+use wow_common::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::vanilla::{Area, Gender, MovementInfo, Vector3d};
 use wow_world_messages::Guid;
 

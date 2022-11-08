@@ -1,6 +1,8 @@
-use wow_vanilla_common::base_stats::{calculate_health, calculate_mana, get_base_stats, BaseStats};
-use wow_vanilla_common::class::get_power_for_class;
-use wow_vanilla_common::{Class, Map, Race};
+use wow_common::vanilla::base_stats::get_base_stats_for;
+use wow_common::vanilla::class::get_power_for_class;
+use wow_common::vanilla::{Class, Map, Race, RaceClass};
+use wow_common::BaseStats;
+use wow_common::{calculate_health, calculate_mana};
 use wow_world_messages::vanilla::{
     Area, CharacterFlags, CharacterGear, Gender, MovementInfo, Power,
 };
@@ -28,7 +30,8 @@ pub struct Character {
 
 impl Character {
     fn default_stats(&self) -> BaseStats {
-        get_base_stats(self.race, self.class, self.level)
+        let combo = RaceClass::try_from((self.race, self.class)).unwrap();
+        get_base_stats_for(combo, self.level).unwrap()
     }
 
     pub fn strength(&self) -> i32 {

@@ -2,7 +2,8 @@ use crate::world::char_create;
 use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler::get_client_login_messages;
-use wow_vanilla_common::race::{character_features_are_valid, character_race_class_combo_is_valid};
+use wow_common::vanilla::race::character_features_are_valid;
+use wow_common::vanilla::RaceClass;
 use wow_world_messages::vanilla::opcodes::ClientOpcodeMessage;
 use wow_world_messages::vanilla::{
     Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG,
@@ -31,14 +32,14 @@ pub async fn handle_character_screen_opcodes(client: &mut Client, mut db: WorldD
                 let character = char_create::create_character(c, &db);
 
                 if character_features_are_valid(
-                    character.race,
-                    character.gender,
+                    character.race.try_into().unwrap(),
+                    character.gender.try_into().unwrap(),
                     character.skin,
                     character.facialhair,
                     character.face,
                     character.haircolor,
                     character.hairstyle,
-                ) && character_race_class_combo_is_valid(character.race, character.class)
+                ) && RaceClass::try_from((character.race, character.class)).is_ok()
                 {
                     db.create_character_in_account(client.account_name(), character);
 

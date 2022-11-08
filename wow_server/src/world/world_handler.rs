@@ -6,16 +6,14 @@ use crate::world::database::WorldDatabase;
 use crate::world::world_opcode_handler;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
-use wow_vanilla_common::class::{get_display_id_for_player, get_power_for_class};
-use wow_vanilla_common::factions::get_race_faction;
-use wow_vanilla_common::position::{get_position_from_str, Position};
-use wow_vanilla_common::race::get_race_scale;
-use wow_vanilla_common::range::trace_point_2d;
-use wow_vanilla_common::{
-    Map, DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED,
-};
+use wow_common::range::trace_point_2d;
+use wow_common::vanilla::class::{get_display_id_for_player, get_power_for_class};
+use wow_common::vanilla::factions::get_race_faction;
+use wow_common::vanilla::position::{get_position_from_str, Position};
+use wow_common::vanilla::race::get_race_scale;
+use wow_common::vanilla::Map;
+use wow_common::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
-use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
     Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock, MovementBlock_MovementFlags,
     MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo,
@@ -25,6 +23,7 @@ use wow_world_messages::vanilla::{
     SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
     SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
+use wow_world_messages::vanilla::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
 
 #[derive(Debug)]
@@ -172,7 +171,10 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
     UpdateMask::Player(
         UpdatePlayerBuilder::new()
             .set_object_GUID(character.guid)
-            .set_object_SCALE_X(get_race_scale(character.race, character.gender))
+            .set_object_SCALE_X(get_race_scale(
+                character.race.try_into().unwrap(),
+                character.gender.try_into().unwrap(),
+            ))
             .set_unit_BYTES_0(
                 character.race,
                 character.class,
@@ -195,9 +197,15 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
             .set_unit_STAMINA(character.stamina())
             .set_unit_INTELLECT(character.intellect())
             .set_unit_SPIRIT(character.spirit())
-            .set_unit_FACTIONTEMPLATE(get_race_faction(character.race))
-            .set_unit_DISPLAYID(get_display_id_for_player(character.race, character.gender))
-            .set_unit_NATIVEDISPLAYID(get_display_id_for_player(character.race, character.gender))
+            .set_unit_FACTIONTEMPLATE(get_race_faction(character.race.try_into().unwrap()))
+            .set_unit_DISPLAYID(get_display_id_for_player(
+                character.race.try_into().unwrap(),
+                character.gender.try_into().unwrap(),
+            ))
+            .set_unit_NATIVEDISPLAYID(get_display_id_for_player(
+                character.race.try_into().unwrap(),
+                character.gender.try_into().unwrap(),
+            ))
             .set_unit_TARGET(character.target)
             .finalize(),
     )
@@ -534,7 +542,7 @@ pub async fn gm_command(
         };
 
         let mut p = client.position();
-        let new_location = trace_point_2d(p.x, p.y, p.orientation, distance);
+        let new_location = trace_point_2d(Vector2d { x: p.x, y: p.y }, p.orientation, distance);
 
         p.x = new_location.0;
         p.y = new_location.1;
@@ -592,7 +600,7 @@ pub async fn prepare_teleport(p: Position, client: &mut Client) {
 }
 
 fn read_locations() -> Vec<(Position, String)> {
-    let b = include_str!("../../../wow_vanilla_common/locations.txt");
+    let b = "";
     let mut v = Vec::new();
 
     for line in b.lines() {

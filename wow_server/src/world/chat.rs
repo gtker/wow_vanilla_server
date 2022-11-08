@@ -1,5 +1,5 @@
 use crate::world::client::Client;
-use wow_vanilla_common::range;
+use wow_common::range;
 use wow_world_messages::vanilla::{
     CMSG_MESSAGECHAT_ChatType, Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType,
     CMSG_MESSAGECHAT, SMSG_MESSAGECHAT,

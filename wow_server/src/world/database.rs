@@ -1,10 +1,10 @@
 use crate::world::character::Character;
 use std::sync::Arc;
 use std::sync::Mutex;
-use wow_common::vanilla::position::{get_position, PositionIdentifier};
-use wow_common::vanilla::{Class, Race};
+use wow_common::wrath::position::{get_position, PositionIdentifier};
+use wow_common::wrath::{Class, Race};
 use wow_common::DEFAULT_RUNNING_SPEED;
-use wow_world_messages::vanilla::{Area, Gender, MovementInfo, Vector3d};
+use wow_world_messages::wrath::{Area, Gender, MovementInfo, Vector3d};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]
@@ -14,7 +14,7 @@ pub struct WorldDatabase {
 
 impl WorldDatabase {
     pub fn new() -> Self {
-        let dev = get_position(PositionIdentifier::DesignerIsland);
+        let dev = get_position(PositionIdentifier::OrcStartZone);
         let human = get_position(PositionIdentifier::HumanStartZone);
 
         Self {
@@ -35,6 +35,7 @@ impl WorldDatabase {
                     map: dev.map,
                     info: MovementInfo {
                         flags: Default::default(),
+                        extra_flags: Default::default(),
                         timestamp: 0,
                         position: Vector3d {
                             x: dev.x,
@@ -63,6 +64,7 @@ impl WorldDatabase {
                     map: human.map,
                     info: MovementInfo {
                         flags: Default::default(),
+                        extra_flags: Default::default(),
                         timestamp: 0,
                         position: Vector3d {
                             x: human.x,
@@ -91,6 +93,7 @@ impl WorldDatabase {
                     map: human.map,
                     info: MovementInfo {
                         flags: Default::default(),
+                        extra_flags: Default::default(),
                         timestamp: 0,
                         position: Vector3d {
                             x: human.x,

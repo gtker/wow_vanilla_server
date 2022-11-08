@@ -1,7 +1,7 @@
-use wow_common::vanilla::position::{get_position, PositionIdentifier};
+use wow_common::wrath::position::{get_position, PositionIdentifier};
 use wow_common::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
-use wow_world_messages::vanilla::UpdateMask;
-use wow_world_messages::vanilla::{
+use wow_world_messages::wrath::UpdateMask;
+use wow_world_messages::wrath::{
     MovementBlock, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo, Object,
     ObjectType, Object_UpdateType, UpdateUnitBuilder, Vector3d, SMSG_UPDATE_OBJECT,
 };
@@ -25,6 +25,7 @@ impl Creature {
             guid: Guid::new(100),
             info: MovementInfo {
                 flags: Default::default(),
+                extra_flags: Default::default(),
                 timestamp: 0,
                 position: Vector3d {
                     x: p.x,
@@ -41,7 +42,6 @@ impl Creature {
 
     pub fn to_message(&self) -> SMSG_UPDATE_OBJECT {
         SMSG_UPDATE_OBJECT {
-            has_transport: 0,
             objects: vec![Object {
                 update_type: Object_UpdateType::CreateObject2 {
                     guid3: self.guid,
@@ -59,12 +59,16 @@ impl Creature {
                     movement2: MovementBlock {
                         update_flag: MovementBlock_UpdateFlag::new_LIVING(
                             MovementBlock_UpdateFlag_Living::Living {
+                                backwards_flight_speed: 0.0,
                                 backwards_running_speed: 0.0,
                                 backwards_swimming_speed: 0.0,
+                                extra_flags: Default::default(),
                                 fall_time: 0.0,
                                 flags: Default::default(),
+                                flight_speed: 0.0,
                                 living_orientation: 0.0,
                                 living_position: self.info.position,
+                                pitch_rate: 0.0,
                                 running_speed: DEFAULT_RUNNING_SPEED,
                                 swimming_speed: 0.0,
                                 timestamp: 0,

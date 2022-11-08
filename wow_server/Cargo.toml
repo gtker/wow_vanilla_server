@@ -11,6 +11,6 @@ tokio = {version = "1.18.2", features = ["full"]}
 #wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "0a28ea67a44d93b383557d7b2d49f1181139f35b", features = ["tokio", "vanilla"] }
 #wow_common = { git="https://github.com/gtker/wow_messages.git", rev = "0a28ea67a44d93b383557d7b2d49f1181139f35b", features = ["vanilla"] }
 wow_login_messages = { path = "../../wow_messages/wow_login_messages", features = ["tokio"] }
-wow_world_messages = { path = "../../wow_messages/wow_world_messages", features = ["tokio", "vanilla"] }
-wow_common = { path = "../../wow_messages/wow_common/wow_common",features = ["vanilla"] }
+wow_world_messages = { path = "../../wow_messages/wow_world_messages", features = ["tokio", "wrath"] }
+wow_common = { path = "../../wow_messages/wow_common/wow_common",features = ["wrath"] }
 wow_srp = "0.5.3"

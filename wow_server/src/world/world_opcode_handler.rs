@@ -5,19 +5,19 @@ use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use crate::world::world_handler::announce_character_login;
 use std::time::SystemTime;
-use wow_common::vanilla::position::{get_position_from_str, Position};
-use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
-use wow_world_messages::vanilla::{
-    LogoutResult, LogoutSpeed, MSG_MOVE_FALL_LAND_Server, MSG_MOVE_HEARTBEAT_Server,
-    MSG_MOVE_JUMP_Server, MSG_MOVE_SET_FACING_Server, MSG_MOVE_SET_PITCH_Server,
-    MSG_MOVE_SET_RUN_MODE_Server, MSG_MOVE_SET_WALK_MODE_Server, MSG_MOVE_START_BACKWARD_Server,
-    MSG_MOVE_START_FORWARD_Server, MSG_MOVE_START_PITCH_DOWN_Server,
-    MSG_MOVE_START_PITCH_UP_Server, MSG_MOVE_START_STRAFE_LEFT_Server,
-    MSG_MOVE_START_STRAFE_RIGHT_Server, MSG_MOVE_START_SWIM_Server,
-    MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server, MSG_MOVE_STOP_PITCH_Server,
-    MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server, MSG_MOVE_STOP_Server,
-    MSG_MOVE_STOP_TURN_Server, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
-    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
+use wow_common::wrath::position::{get_position_from_str, Position};
+use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
+use wow_world_messages::wrath::{
+    LogoutResult, LogoutSpeed, MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT,
+    MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH,
+    MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD,
+    MSG_MOVE_START_FORWARD, MSG_MOVE_START_PITCH_DOWN,
+    MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT,
+    MSG_MOVE_START_STRAFE_RIGHT, MSG_MOVE_START_SWIM,
+    MSG_MOVE_START_TURN_LEFT, MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP_PITCH,
+    MSG_MOVE_STOP_STRAFE, MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP,
+    MSG_MOVE_STOP_TURN, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
+    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE, SMSG_NAME_QUERY_RESPONSE_DeclinedNames,
 };
 use wow_world_messages::Guid;
 
@@ -46,6 +46,7 @@ pub async fn handle_received_client_opcodes(
                         race: character.race,
                         gender: character.gender,
                         class: character.class,
+                        has_declined_names: SMSG_NAME_QUERY_RESPONSE_DeclinedNames::No,
                     })
                     .await;
             }
@@ -99,7 +100,7 @@ pub async fn handle_received_client_opcodes(
                         c.message.trim_start_matches('.'),
                         locations,
                     )
-                    .await;
+                        .await;
 
                     return;
                 }
@@ -131,239 +132,240 @@ pub async fn handle_received_client_opcodes(
                             .duration_since(SystemTime::UNIX_EPOCH)
                             .unwrap()
                             .as_secs() as u32,
+                        time_until_daily_quest_reset: 0
                     })
                     .await;
             }
             ClientOpcodeMessage::MSG_MOVE_START_FORWARD(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_FORWARD_Server {
+                    MSG_MOVE_START_FORWARD {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_BACKWARD(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_BACKWARD_Server {
+                    MSG_MOVE_START_BACKWARD {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_Server {
+                    MSG_MOVE_STOP {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_STRAFE_LEFT(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_STRAFE_LEFT_Server {
+                    MSG_MOVE_START_STRAFE_LEFT {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_STRAFE_RIGHT(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_STRAFE_RIGHT_Server {
+                    MSG_MOVE_START_STRAFE_RIGHT {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_STRAFE(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_STRAFE_Server {
+                    MSG_MOVE_STOP_STRAFE {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_JUMP(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_JUMP_Server {
+                    MSG_MOVE_JUMP {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_TURN_LEFT(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_TURN_LEFT_Server {
+                    MSG_MOVE_START_TURN_LEFT {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_TURN_RIGHT(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_TURN_RIGHT_Server {
+                    MSG_MOVE_START_TURN_RIGHT {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_TURN(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_TURN_Server {
+                    MSG_MOVE_STOP_TURN {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_PITCH_UP(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_PITCH_UP_Server {
+                    MSG_MOVE_START_PITCH_UP {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_PITCH_DOWN(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_PITCH_DOWN_Server {
+                    MSG_MOVE_START_PITCH_DOWN {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_PITCH(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_PITCH_Server {
+                    MSG_MOVE_STOP_PITCH {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_RUN_MODE(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_SET_RUN_MODE_Server {
+                    MSG_MOVE_SET_RUN_MODE {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_WALK_MODE(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_SET_WALK_MODE_Server {
+                    MSG_MOVE_SET_WALK_MODE {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_FALL_LAND(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_FALL_LAND_Server {
+                    MSG_MOVE_FALL_LAND {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_SWIM(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_START_SWIM_Server {
+                    MSG_MOVE_START_SWIM {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_SWIM(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_SWIM_Server {
+                    MSG_MOVE_STOP_SWIM {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_FACING(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_SET_FACING_Server {
+                    MSG_MOVE_SET_FACING {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_PITCH(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_SET_PITCH_Server {
+                    MSG_MOVE_SET_PITCH {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::MSG_MOVE_HEARTBEAT(c) => {
                 send_movement_to_clients(
-                    MSG_MOVE_HEARTBEAT_Server {
+                    MSG_MOVE_HEARTBEAT {
                         guid: client.character().guid,
                         info: c.info,
                     }
-                    .into(),
+                        .into(),
                     clients,
                 )
-                .await
+                    .await
             }
             ClientOpcodeMessage::CMSG_MOVE_FALL_RESET(_) => {}
             ClientOpcodeMessage::CMSG_PING(c) => {

@@ -7,11 +7,11 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
 use wow_common::range::distance_between;
-use wow_common::vanilla::position::Position;
-use wow_srp::vanilla_header::{EncrypterHalf, HeaderCrypto};
+use wow_common::wrath::position::Position;
+use wow_srp::wrath_header::{ServerEncrypterHalf, ServerCrypto};
 use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
-use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
-use wow_world_messages::vanilla::{
+use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
+use wow_world_messages::wrath::{
     Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d, SMSG_MESSAGECHAT,
 };
 use wow_world_messages::Guid;
@@ -30,7 +30,7 @@ pub struct Client {
     pub status: CharacterScreenProgress,
     received_messages: Receiver<ClientOpcodeMessage>,
     write: OwnedWriteHalf,
-    encrypter: EncrypterHalf,
+    encrypter: ServerEncrypterHalf,
     account_name: String,
     pub reader_handle: JoinHandle<()>,
 }
@@ -40,7 +40,7 @@ impl Client {
         account_name: String,
         character: Character,
         stream: TcpStream,
-        encryption: HeaderCrypto,
+        encryption: ServerCrypto,
     ) -> Self {
         let (read, write) = stream.into_split();
         let (encrypter, decrypter) = encryption.split();
@@ -124,9 +124,11 @@ impl Client {
     pub async fn send_system_message(&mut self, s: String) {
         self.send_message(SMSG_MESSAGECHAT {
             chat_type: SMSG_MESSAGECHAT_ChatType::System {
-                sender2: Guid::new(0),
+                target6: Guid::new(0),
             },
             language: Language::Universal,
+            sender: 0.into(),
+            flags: 0,
             message: s,
             tag: PlayerChatTag::None,
         })

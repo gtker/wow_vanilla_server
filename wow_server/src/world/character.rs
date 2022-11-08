@@ -1,10 +1,10 @@
-use wow_common::vanilla::base_stats::get_base_stats_for;
-use wow_common::vanilla::class::get_power_for_class;
-use wow_common::vanilla::{Class, Map, Race, RaceClass};
+use wow_common::wrath::base_stats::get_base_stats_for;
+use wow_common::wrath::class::get_power_for_class;
+use wow_common::wrath::{Class, Map, Race, RaceClass};
 use wow_common::BaseStats;
 use wow_common::{calculate_health, calculate_mana};
-use wow_world_messages::vanilla::{
-    Area, CharacterFlags, CharacterGear, Gender, MovementInfo, Power,
+use wow_world_messages::wrath::{
+    Area,  CharacterGear, Gender, MovementInfo, Power,
 };
 use wow_world_messages::Guid;
 
@@ -75,9 +75,9 @@ impl Character {
     }
 }
 
-impl From<Character> for wow_world_messages::vanilla::Character {
+impl From<Character> for wow_world_messages::wrath::Character {
     fn from(e: Character) -> Self {
-        wow_world_messages::vanilla::Character {
+        wow_world_messages::wrath::Character {
             guid: e.guid,
             name: e.name,
             race: e.race,
@@ -93,12 +93,13 @@ impl From<Character> for wow_world_messages::vanilla::Character {
             map: e.map,
             position: e.info.position,
             guild_id: 0,
-            flags: CharacterFlags::empty(),
+            flags: 0,
+            recustomization_flags: 0,
             first_login: false,
             pet_display_id: 0,
             pet_level: 0,
             pet_family: 0,
-            equipment: [CharacterGear::default(); 19],
+            equipment: [CharacterGear::default(); 23],
         }
     }
 }

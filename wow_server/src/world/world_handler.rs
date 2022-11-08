@@ -7,14 +7,14 @@ use crate::world::world_opcode_handler;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
 use wow_common::range::trace_point_2d;
-use wow_common::vanilla::class::{get_display_id_for_player, get_power_for_class};
-use wow_common::vanilla::factions::get_race_faction;
-use wow_common::vanilla::position::{get_position_from_str, Position};
-use wow_common::vanilla::race::get_race_scale;
-use wow_common::vanilla::Map;
+use wow_common::wrath::class::{get_display_id_for_player, get_power_for_class};
+use wow_common::wrath::factions::get_race_faction;
+use wow_common::wrath::position::{get_position_from_str, Position};
+use wow_common::wrath::race::get_race_scale;
+use wow_common::wrath::Map;
 use wow_common::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
-use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
-use wow_world_messages::vanilla::{
+use wow_world_messages::wrath::opcodes::ServerOpcodeMessage;
+use wow_world_messages::wrath::{
     Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock, MovementBlock_MovementFlags,
     MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo,
     MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
@@ -23,7 +23,7 @@ use wow_world_messages::vanilla::{
     SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
     SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
-use wow_world_messages::vanilla::{UpdateMask, Vector2d};
+use wow_world_messages::wrath::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
 
 #[derive(Debug)]
@@ -109,7 +109,7 @@ impl World {
             self.clients_on_character_screen.push(c);
 
             for a in &mut self.clients {
-                a.send_message(SMSG_DESTROY_OBJECT { guid }).await;
+                a.send_message(SMSG_DESTROY_OBJECT { guid, target_died: false }).await;
             }
         }
 
@@ -139,7 +139,6 @@ pub fn get_self_update_object_create_object2(character: &Character) -> SMSG_UPDA
 
 pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OBJECT {
     SMSG_UPDATE_OBJECT {
-        has_transport: 0,
         objects: vec![Object {
             update_type: Object_UpdateType::CreateObject2 {
                 guid3: character.guid,
@@ -147,12 +146,16 @@ pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OB
                 movement2: MovementBlock {
                     update_flag: MovementBlock_UpdateFlag::new_LIVING(
                         MovementBlock_UpdateFlag_Living::Living {
+                            backwards_flight_speed: 0.0,
                             backwards_running_speed: DEFAULT_RUNNING_BACKWARDS_SPEED,
                             backwards_swimming_speed: 0.0,
+                            extra_flags: Default::default(),
                             fall_time: 0.0,
                             flags: MovementBlock_MovementFlags::empty(),
+                            flight_speed: 0.0,
                             living_orientation: character.info.orientation,
                             living_position: character.info.position,
+                            pitch_rate: 0.0,
                             running_speed: character.movement_speed,
                             swimming_speed: 0.0,
                             timestamp: 0,
@@ -182,7 +185,7 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
                 get_power_for_class(character.class),
             )
             .set_player_BYTES_2(character.facialhair, 0, 0, 2)
-            .set_player_FEATURES(
+            .set_player_BYTES(
                 character.skin,
                 character.face,
                 character.hairstyle,
@@ -240,6 +243,7 @@ pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage;
                 minute,
             ),
             timescale: 1.0 / 60.0,
+            unknown1: 0
         },
     ));
 
@@ -252,7 +256,7 @@ pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage;
     ));
 
     v.push(ServerOpcodeMessage::SMSG_ACCOUNT_DATA_TIMES(
-        SMSG_ACCOUNT_DATA_TIMES { data: [0; 32] },
+        SMSG_ACCOUNT_DATA_TIMES { unix_time: 0, unknown1: 0, mask: Default::default(), data: vec![0; 32] },
     ));
 
     v.push(ServerOpcodeMessage::SMSG_TUTORIAL_FLAGS(
@@ -268,10 +272,12 @@ pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage;
 
     v.push(ServerOpcodeMessage::SMSG_MESSAGECHAT(SMSG_MESSAGECHAT {
         chat_type: SMSG_MESSAGECHAT_ChatType::System {
-            sender2: Guid::new(0),
+            target6: Guid::new(0),
         },
         language: Language::Universal,
-        message: "Patch 1.12: Drums of War is now live!".to_string(),
+        sender: 0.into(),
+        flags: 0,
+        message: "Patch 3.3.5: Whatever is now live!".to_string(),
         tag: PlayerChatTag::None,
     }));
 
@@ -472,6 +478,7 @@ pub async fn gm_command(
                 .send_message(SMSG_FORCE_RUN_SPEED_CHANGE {
                     guid: client.character().guid,
                     move_event: 0,
+                    unknown: 0,
                     speed,
                 })
                 .await;
@@ -562,6 +569,7 @@ pub async fn prepare_teleport(p: Position, client: &mut Client) {
                 movement_counter: 0,
                 info: MovementInfo {
                     flags: MovementInfo_MovementFlags::empty(),
+                    extra_flags: Default::default(),
                     timestamp: 0,
                     position: Vector3d {
                         x: p.x,

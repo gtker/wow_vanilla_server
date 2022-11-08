@@ -207,6 +207,9 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
                 character.gender.try_into().unwrap(),
             ))
             .set_unit_TARGET(character.target)
+            .set_player_SKILL_INFO_1_1(98)
+            .set_player_SKILL_INFO_1_2(300, 305)
+            .set_player_SKILL_INFO_1_3(5)
             .finalize(),
     )
 }

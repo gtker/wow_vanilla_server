@@ -30,7 +30,7 @@ impl WorldDatabase {
                     hairstyle: 0,
                     haircolor: 0,
                     facialhair: 0,
-                    level: 1,
+                    level: 60,
                     area: Area::DesignerIsland,
                     map: dev.map,
                     info: MovementInfo {
@@ -58,7 +58,7 @@ impl WorldDatabase {
                     hairstyle: 0,
                     haircolor: 0,
                     facialhair: 0,
-                    level: 1,
+                    level: 60,
                     area: Default::default(),
                     map: human.map,
                     info: MovementInfo {
@@ -86,7 +86,7 @@ impl WorldDatabase {
                     hairstyle: 0,
                     haircolor: 0,
                     facialhair: 0,
-                    level: 1,
+                    level: 60,
                     area: Default::default(),
                     map: human.map,
                     info: MovementInfo {

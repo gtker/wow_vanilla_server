@@ -74,7 +74,7 @@ async fn character_screen(
     SMSG_AUTH_CHALLENGE {
         unknown1: 0,
         server_seed: seed.seed(),
-        seed: [0; 32]
+        seed: [0; 32],
     }
     .tokio_write_unencrypted_server(&mut stream)
     .await
@@ -116,6 +116,7 @@ async fn character_screen(
         name: "".to_string(),
         race: Default::default(),
         class: Default::default(),
+        race_class: Default::default(),
         gender: Default::default(),
         skin: 0,
         face: 0,

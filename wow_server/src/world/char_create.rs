@@ -13,6 +13,7 @@ pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Chara
         name: c.name,
         race: c.race,
         class: c.class,
+        race_class: (c.race, c.class).try_into().unwrap(),
         gender: c.gender,
         skin: c.skin_color,
         face: c.face,

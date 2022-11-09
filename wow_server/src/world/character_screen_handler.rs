@@ -5,7 +5,7 @@ use crate::world::world_handler::get_client_login_messages;
 use wow_common::wrath::RaceClass;
 use wow_world_messages::wrath::opcodes::ClientOpcodeMessage;
 use wow_world_messages::wrath::{
-    Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG,
+    Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG, SMSG_TIME_SYNC_REQ,
 };
 
 pub async fn handle_character_screen_opcodes(client: &mut Client, mut db: WorldDatabase) {
@@ -30,8 +30,7 @@ pub async fn handle_character_screen_opcodes(client: &mut Client, mut db: WorldD
             ClientOpcodeMessage::CMSG_CHAR_CREATE(c) => {
                 let character = char_create::create_character(c, &db);
 
-                if RaceClass::try_from((character.race, character.class)).is_ok()
-                {
+                if RaceClass::try_from((character.race, character.class)).is_ok() {
                     db.create_character_in_account(client.account_name(), character);
 
                     client
@@ -59,6 +58,10 @@ pub async fn handle_character_screen_opcodes(client: &mut Client, mut db: WorldD
                 for m in get_client_login_messages(client.character()) {
                     client.send_opcode(&m).await;
                 }
+
+                client
+                    .send_message(SMSG_TIME_SYNC_REQ { time_sync: 0 })
+                    .await;
             }
             e => {
                 dbg!(e);

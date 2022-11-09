@@ -2,7 +2,7 @@ use crate::world::character::Character;
 use std::sync::Arc;
 use std::sync::Mutex;
 use wow_common::wrath::position::{get_position, PositionIdentifier};
-use wow_common::wrath::{Class, Race};
+use wow_common::wrath::{Class, Race, RaceClass};
 use wow_common::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::wrath::{Area, Gender, MovementInfo, Vector3d};
 use wow_world_messages::Guid;
@@ -24,6 +24,7 @@ impl WorldDatabase {
                     name: "Dev".to_string(),
                     race: Race::Human,
                     class: Class::Warrior,
+                    race_class: RaceClass::HumanWarrior,
                     gender: Gender::Female,
                     skin: 0,
                     face: 0,
@@ -53,6 +54,7 @@ impl WorldDatabase {
                     name: "HumOne".to_string(),
                     race: Race::Human,
                     class: Class::Warrior,
+                    race_class: RaceClass::HumanWarrior,
                     gender: Gender::Female,
                     skin: 0,
                     face: 0,
@@ -82,6 +84,7 @@ impl WorldDatabase {
                     name: "HumTwo".to_string(),
                     race: Race::Human,
                     class: Class::Warrior,
+                    race_class: RaceClass::HumanWarrior,
                     gender: Gender::Male,
                     skin: 0,
                     face: 0,

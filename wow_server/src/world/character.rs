@@ -3,9 +3,7 @@ use wow_common::wrath::class::get_power_for_class;
 use wow_common::wrath::{Class, Map, Race, RaceClass};
 use wow_common::BaseStats;
 use wow_common::{calculate_health, calculate_mana};
-use wow_world_messages::wrath::{
-    Area,  CharacterGear, Gender, MovementInfo, Power,
-};
+use wow_world_messages::wrath::{Area, CharacterGear, Gender, MovementInfo, Power};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]
@@ -14,6 +12,7 @@ pub struct Character {
     pub name: String,
     pub race: Race,
     pub class: Class,
+    pub race_class: RaceClass,
     pub gender: Gender,
     pub skin: u8,
     pub face: u8,

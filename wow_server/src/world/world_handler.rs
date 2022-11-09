@@ -11,17 +11,19 @@ use wow_common::vanilla::class::{get_display_id_for_player, get_power_for_class}
 use wow_common::vanilla::factions::get_race_faction;
 use wow_common::vanilla::position::{get_position_from_str, Position};
 use wow_common::vanilla::race::get_race_scale;
+use wow_common::vanilla::spells::starter_spells;
 use wow_common::vanilla::Map;
 use wow_common::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
 use wow_world_messages::vanilla::{
-    Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock, MovementBlock_MovementFlags,
-    MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo,
-    MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
+    InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
+    MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
+    MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
     SMSG_MESSAGECHAT_ChatType, UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES,
-    SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_LOGIN_SETTIMESPEED,
-    SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
-    SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
+    SMSG_ACTION_BUTTONS, SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS,
+    SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD,
+    SMSG_SET_REST_START, SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS,
+    SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::vanilla::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
@@ -220,8 +222,8 @@ pub async fn announce_character_login(client: &mut Client, character: &Character
     client.send_message(m).await;
 }
 
-pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage; 6] {
-    let mut v = Vec::with_capacity(6);
+pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessage> {
+    let mut v = Vec::with_capacity(16);
 
     let year = 22;
     let month = 7;
@@ -264,8 +266,6 @@ pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage;
         },
     ));
 
-    v.push(get_self_update_object_create_object2(character).into());
-
     v.push(ServerOpcodeMessage::SMSG_MESSAGECHAT(SMSG_MESSAGECHAT {
         chat_type: SMSG_MESSAGECHAT_ChatType::System {
             sender2: Guid::new(0),
@@ -275,7 +275,33 @@ pub fn get_client_login_messages(character: &Character) -> [ServerOpcodeMessage;
         tag: PlayerChatTag::None,
     }));
 
-    v.try_into().unwrap()
+    v.push(
+        SMSG_INITIAL_SPELLS {
+            unknown1: 0,
+            initial_spells: starter_spells(character.race_class)
+                .iter()
+                .map(|a| InitialSpell {
+                    spell_id: *a as u16,
+                    unknown1: 0,
+                })
+                .collect(),
+            cooldowns: vec![],
+        }
+        .into(),
+    );
+
+    let mut data = [0; 120];
+    data[72] = 6603;
+    data[73] = 78;
+    data[83] = 117;
+
+    v.push(SMSG_ACTION_BUTTONS { data }.into());
+
+    v.push(SMSG_SET_REST_START { unknown1: 0 }.into());
+
+    v.push(get_self_update_object_create_object2(character).into());
+
+    v
 }
 
 pub async fn gm_command(

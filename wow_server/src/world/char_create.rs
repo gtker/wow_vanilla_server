@@ -1,6 +1,7 @@
 use crate::world::character::Character;
 use crate::world::database::WorldDatabase;
 use wow_common::vanilla::position::get_starting_position;
+use wow_common::vanilla::RaceClass;
 use wow_common::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::vanilla::{Area, MovementInfo, Vector3d, CMSG_CHAR_CREATE};
 use wow_world_messages::Guid;
@@ -13,6 +14,7 @@ pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Chara
         name: c.name,
         race: c.race,
         class: c.class,
+        race_class: RaceClass::try_from((c.race, c.class)).unwrap(),
         gender: c.gender,
         skin: c.skin_color,
         face: c.face,

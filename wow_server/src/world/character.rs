@@ -14,6 +14,7 @@ pub struct Character {
     pub name: String,
     pub race: Race,
     pub class: Class,
+    pub race_class: RaceClass,
     pub gender: Gender,
     pub skin: u8,
     pub face: u8,

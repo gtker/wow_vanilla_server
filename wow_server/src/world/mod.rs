@@ -113,6 +113,7 @@ async fn character_screen(
         name: "".to_string(),
         race: Default::default(),
         class: Default::default(),
+        race_class: Default::default(),
         gender: Default::default(),
         skin: 0,
         face: 0,

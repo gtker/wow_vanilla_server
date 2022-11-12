@@ -11,6 +11,7 @@ use wow_common::wrath::class::{get_display_id_for_player, get_power_for_class};
 use wow_common::wrath::factions::get_race_faction;
 use wow_common::wrath::position::{get_position_from_str, Position};
 use wow_common::wrath::race::get_race_scale;
+use wow_common::wrath::skills::starter_skills;
 use wow_common::wrath::spells::starter_spells;
 use wow_common::wrath::Map;
 use wow_common::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
@@ -19,10 +20,10 @@ use wow_world_messages::wrath::{
     InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
     MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
     MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
-    SMSG_MESSAGECHAT_ChatType, UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES,
-    SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED,
-    SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
-    SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
+    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdatePlayerBuilder, Vector3d,
+    SMSG_ACCOUNT_DATA_TIMES, SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS,
+    SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD,
+    SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::wrath::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
@@ -176,50 +177,53 @@ pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OB
 }
 
 fn get_update_object_player(character: &Character) -> UpdateMask {
-    UpdateMask::Player(
-        UpdatePlayerBuilder::new()
-            .set_object_GUID(character.guid)
-            .set_object_SCALE_X(get_race_scale(
-                character.race.try_into().unwrap(),
-                character.gender.try_into().unwrap(),
-            ))
-            .set_unit_BYTES_0(
-                character.race,
-                character.class,
-                character.gender,
-                get_power_for_class(character.class),
-            )
-            .set_player_BYTES_2(character.facialhair, 0, 0, 2)
-            .set_player_BYTES(
-                character.skin,
-                character.face,
-                character.hairstyle,
-                character.haircolor,
-            )
-            .set_unit_BASE_HEALTH(character.base_health())
-            .set_unit_HEALTH(character.max_health())
-            .set_unit_MAXHEALTH(character.max_health())
-            .set_unit_LEVEL(character.level as i32)
-            .set_unit_AGILITY(character.agility())
-            .set_unit_STRENGTH(character.strength())
-            .set_unit_STAMINA(character.stamina())
-            .set_unit_INTELLECT(character.intellect())
-            .set_unit_SPIRIT(character.spirit())
-            .set_unit_FACTIONTEMPLATE(get_race_faction(character.race.try_into().unwrap()))
-            .set_unit_DISPLAYID(get_display_id_for_player(
-                character.race.try_into().unwrap(),
-                character.gender.try_into().unwrap(),
-            ))
-            .set_unit_NATIVEDISPLAYID(get_display_id_for_player(
-                character.race.try_into().unwrap(),
-                character.gender.try_into().unwrap(),
-            ))
-            .set_unit_TARGET(character.target)
-            .set_player_SKILL_INFO_1_1(98)
-            .set_player_SKILL_INFO_1_2(300, 305)
-            .set_player_SKILL_INFO_1_3(5)
-            .finalize(),
-    )
+    let mut mask = UpdatePlayerBuilder::new()
+        .set_object_GUID(character.guid)
+        .set_object_SCALE_X(get_race_scale(
+            character.race.try_into().unwrap(),
+            character.gender.try_into().unwrap(),
+        ))
+        .set_unit_BYTES_0(
+            character.race,
+            character.class,
+            character.gender,
+            get_power_for_class(character.class),
+        )
+        .set_player_BYTES_2(character.facialhair, 0, 0, 2)
+        .set_player_BYTES(
+            character.skin,
+            character.face,
+            character.hairstyle,
+            character.haircolor,
+        )
+        .set_unit_BASE_HEALTH(character.base_health())
+        .set_unit_HEALTH(character.max_health())
+        .set_unit_MAXHEALTH(character.max_health())
+        .set_unit_LEVEL(character.level as i32)
+        .set_unit_AGILITY(character.agility())
+        .set_unit_STRENGTH(character.strength())
+        .set_unit_STAMINA(character.stamina())
+        .set_unit_INTELLECT(character.intellect())
+        .set_unit_SPIRIT(character.spirit())
+        .set_unit_FACTIONTEMPLATE(get_race_faction(character.race.try_into().unwrap()))
+        .set_unit_DISPLAYID(get_display_id_for_player(
+            character.race.try_into().unwrap(),
+            character.gender.try_into().unwrap(),
+        ))
+        .set_unit_NATIVEDISPLAYID(get_display_id_for_player(
+            character.race.try_into().unwrap(),
+            character.gender.try_into().unwrap(),
+        ))
+        .set_unit_TARGET(character.target);
+
+    for (i, skill) in starter_skills(character.race_class).iter().enumerate() {
+        mask = mask.set_player_SKILL_INFO(
+            SkillInfo::new(*skill, 0, 295, 300, 0, 2),
+            SkillInfoIndex::try_from(i as u32).unwrap(),
+        );
+    }
+
+    UpdateMask::Player(mask.finalize())
 }
 
 pub async fn announce_character_login(client: &mut Client, character: &Character) {

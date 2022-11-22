@@ -1,5 +1,5 @@
 use crate::world::client::Client;
-use wow_world_base::range;
+use wow_world_base::geometry;
 use wow_world_messages::wrath::{
     CMSG_MESSAGECHAT_ChatType, Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType,
     CMSG_MESSAGECHAT, SMSG_MESSAGECHAT,
@@ -11,14 +11,14 @@ pub async fn handle_message(client: &mut Client, clients: &mut [Client], m: CMSG
     let f = match m.chat_type {
         CMSG_MESSAGECHAT_ChatType::Say => |a: &Client, b: &Client| -> bool {
             if let Some(v) = a.distance_to_center(b) {
-                v < range::SAY
+                v < geometry::SAY
             } else {
                 false
             }
         },
         CMSG_MESSAGECHAT_ChatType::Yell => |a: &Client, b: &Client| -> bool {
             if let Some(v) = a.distance_to_center(b) {
-                v < range::YELL
+                v < geometry::YELL
             } else {
                 false
             }

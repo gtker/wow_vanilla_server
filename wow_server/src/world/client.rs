@@ -7,7 +7,7 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
 use wow_srp::wrath_header::{ServerCrypto, ServerEncrypterHalf};
-use wow_world_base::range::distance_between;
+use wow_world_base::geometry::distance_between;
 use wow_world_base::wrath::position::Position;
 use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
@@ -123,7 +123,7 @@ impl Client {
             .unwrap();
     }
 
-    pub async fn send_system_message(&mut self, s: String) {
+    pub async fn send_system_message(&mut self, s: impl Into<String>) {
         self.send_message(SMSG_MESSAGECHAT {
             chat_type: SMSG_MESSAGECHAT_ChatType::System {
                 target6: Guid::new(0),
@@ -131,7 +131,7 @@ impl Client {
             language: Language::Universal,
             sender: 0.into(),
             flags: 0,
-            message: s,
+            message: s.into(),
             tag: PlayerChatTag::None,
         })
         .await;

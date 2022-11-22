@@ -6,7 +6,7 @@ use crate::world::database::WorldDatabase;
 use crate::world::world_opcode_handler;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
-use wow_world_base::range::trace_point_2d;
+use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::wrath::position::{position_from_str, Position};
 use wow_world_base::wrath::{Map, PlayerGender, PlayerRace};
 use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};

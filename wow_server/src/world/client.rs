@@ -11,9 +11,7 @@ use wow_world_base::range::distance_between;
 use wow_world_base::wrath::position::Position;
 use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
-use wow_world_messages::wrath::{
-    Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d, SMSG_MESSAGECHAT,
-};
+use wow_world_messages::wrath::{Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d, SMSG_MESSAGECHAT, MovementInfo};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
@@ -99,6 +97,10 @@ impl Client {
 
     pub fn character_mut(&mut self) -> &mut Character {
         &mut self.character
+    }
+
+    pub fn set_movement_info(&mut self, info: MovementInfo) {
+        self.character.info = info;
     }
 
     pub fn account_name(&self) -> &str {

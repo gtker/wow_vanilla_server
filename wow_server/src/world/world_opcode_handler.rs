@@ -135,6 +135,7 @@ pub async fn handle_received_client_opcodes(
                     .await;
             }
             ClientOpcodeMessage::MSG_MOVE_START_FORWARD(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_FORWARD {
                         guid: client.character().guid,
@@ -146,6 +147,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_BACKWARD(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_BACKWARD {
                         guid: client.character().guid,
@@ -157,6 +159,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_STOP {
                         guid: client.character().guid,
@@ -168,6 +171,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_STRAFE_LEFT(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_STRAFE_LEFT {
                         guid: client.character().guid,
@@ -179,6 +183,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_STRAFE_RIGHT(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_STRAFE_RIGHT {
                         guid: client.character().guid,
@@ -190,6 +195,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_STRAFE(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_STOP_STRAFE {
                         guid: client.character().guid,
@@ -201,6 +207,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_JUMP(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_JUMP {
                         guid: client.character().guid,
@@ -212,6 +219,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_TURN_LEFT(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_TURN_LEFT {
                         guid: client.character().guid,
@@ -223,6 +231,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_TURN_RIGHT(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_TURN_RIGHT {
                         guid: client.character().guid,
@@ -234,6 +243,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_TURN(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_STOP_TURN {
                         guid: client.character().guid,
@@ -245,6 +255,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_PITCH_UP(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_PITCH_UP {
                         guid: client.character().guid,
@@ -256,6 +267,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_PITCH_DOWN(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_PITCH_DOWN {
                         guid: client.character().guid,
@@ -267,6 +279,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_PITCH(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_STOP_PITCH {
                         guid: client.character().guid,
@@ -278,6 +291,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_RUN_MODE(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_SET_RUN_MODE {
                         guid: client.character().guid,
@@ -289,6 +303,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_WALK_MODE(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_SET_WALK_MODE {
                         guid: client.character().guid,
@@ -300,6 +315,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_FALL_LAND(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_FALL_LAND {
                         guid: client.character().guid,
@@ -311,6 +327,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_START_SWIM(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_START_SWIM {
                         guid: client.character().guid,
@@ -322,6 +339,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_STOP_SWIM(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_STOP_SWIM {
                         guid: client.character().guid,
@@ -333,6 +351,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_FACING(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_SET_FACING {
                         guid: client.character().guid,
@@ -344,6 +363,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_SET_PITCH(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_SET_PITCH {
                         guid: client.character().guid,
@@ -355,6 +375,7 @@ pub async fn handle_received_client_opcodes(
                 .await
             }
             ClientOpcodeMessage::MSG_MOVE_HEARTBEAT(c) => {
+                client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
                     MSG_MOVE_HEARTBEAT {
                         guid: client.character().guid,

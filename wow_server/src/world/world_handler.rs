@@ -631,14 +631,14 @@ pub async fn prepare_teleport(p: Position, client: &mut Client) {
                 orientation: p.orientation,
             })
             .await;
-
-        client.character_mut().info.position.x = p.x;
-        client.character_mut().info.position.y = p.y;
-        client.character_mut().info.position.z = p.z;
-        client.character_mut().info.orientation = p.orientation;
-        client.character_mut().map = p.map;
-        client.in_process_of_teleport = true;
     }
+
+    client.character_mut().info.position.x = p.x;
+    client.character_mut().info.position.y = p.y;
+    client.character_mut().info.position.z = p.z;
+    client.character_mut().info.orientation = p.orientation;
+    client.character_mut().map = p.map;
+    client.in_process_of_teleport = true;
 }
 
 fn read_locations() -> Vec<(Position, String)> {

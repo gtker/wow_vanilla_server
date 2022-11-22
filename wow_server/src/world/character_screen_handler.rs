@@ -2,7 +2,7 @@ use crate::world::char_create;
 use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler::get_client_login_messages;
-use wow_common::wrath::RaceClass;
+use wow_world_base::wrath::RaceClass;
 use wow_world_messages::wrath::opcodes::ClientOpcodeMessage;
 use wow_world_messages::wrath::{
     Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG, SMSG_TIME_SYNC_REQ,

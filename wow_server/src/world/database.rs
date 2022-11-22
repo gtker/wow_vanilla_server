@@ -1,9 +1,9 @@
 use crate::world::character::Character;
 use std::sync::Arc;
 use std::sync::Mutex;
-use wow_common::wrath::position::{get_position, PositionIdentifier};
-use wow_common::wrath::{Class, Race, RaceClass};
-use wow_common::DEFAULT_RUNNING_SPEED;
+use wow_world_base::wrath::position::{position, PositionIdentifier};
+use wow_world_base::wrath::{Class, Race, RaceClass};
+use wow_world_base::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::wrath::{Area, Gender, MovementInfo, Vector3d};
 use wow_world_messages::Guid;
 
@@ -14,8 +14,8 @@ pub struct WorldDatabase {
 
 impl WorldDatabase {
     pub fn new() -> Self {
-        let dev = get_position(PositionIdentifier::OrcStartZone);
-        let human = get_position(PositionIdentifier::HumanStartZone);
+        let dev = position(PositionIdentifier::OrcStartZone);
+        let human = position(PositionIdentifier::HumanStartZone);
 
         Self {
             characters_for_all_accounts: Arc::new(Mutex::new(vec![

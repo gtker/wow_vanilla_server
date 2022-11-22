@@ -1,9 +1,7 @@
-use wow_common::wrath::base_stats::get_base_stats_for;
-use wow_common::wrath::class::get_power_for_class;
-use wow_common::wrath::{Class, Map, Race, RaceClass};
-use wow_common::BaseStats;
-use wow_common::{calculate_health, calculate_mana};
-use wow_world_messages::wrath::{Area, CharacterGear, Gender, MovementInfo, Power};
+use wow_world_base::wrath::{Class, Map, Race, RaceClass};
+use wow_world_base::BaseStats;
+use wow_world_base::{calculate_health, calculate_mana};
+use wow_world_messages::wrath::{Area, CharacterGear, CreatureFamily, Gender, MovementInfo, Power};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]
@@ -30,7 +28,9 @@ pub struct Character {
 impl Character {
     fn default_stats(&self) -> BaseStats {
         let combo = RaceClass::try_from((self.race, self.class)).unwrap();
-        get_base_stats_for(combo, self.level).unwrap()
+        combo
+            .base_stats_for(self.level)
+            .unwrap_or(combo.base_stats()[0])
     }
 
     pub fn strength(&self) -> i32 {
@@ -50,7 +50,7 @@ impl Character {
     }
 
     pub fn max_mana(&self) -> i32 {
-        if get_power_for_class(self.class) == Power::Mana {
+        if self.class.power_type() == Power::Mana {
             calculate_mana(self.default_stats().mana, self.default_stats().intellect).into()
         } else {
             0
@@ -97,7 +97,7 @@ impl From<Character> for wow_world_messages::wrath::Character {
             first_login: false,
             pet_display_id: 0,
             pet_level: 0,
-            pet_family: 0,
+            pet_family: CreatureFamily::None,
             equipment: [CharacterGear::default(); 23],
         }
     }

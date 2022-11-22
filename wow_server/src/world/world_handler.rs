@@ -6,15 +6,10 @@ use crate::world::database::WorldDatabase;
 use crate::world::world_opcode_handler;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
-use wow_common::range::trace_point_2d;
-use wow_common::wrath::class::{get_display_id_for_player, get_power_for_class};
-use wow_common::wrath::factions::get_race_faction;
-use wow_common::wrath::position::{get_position_from_str, Position};
-use wow_common::wrath::race::get_race_scale;
-use wow_common::wrath::skills::starter_skills;
-use wow_common::wrath::spells::starter_spells;
-use wow_common::wrath::Map;
-use wow_common::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
+use wow_world_base::range::trace_point_2d;
+use wow_world_base::wrath::position::{position_from_str, Position};
+use wow_world_base::wrath::{Map, PlayerGender, PlayerRace};
+use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::wrath::opcodes::ServerOpcodeMessage;
 use wow_world_messages::wrath::{
     InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
@@ -179,15 +174,18 @@ pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OB
 fn get_update_object_player(character: &Character) -> UpdateMask {
     let mut mask = UpdatePlayerBuilder::new()
         .set_object_GUID(character.guid)
-        .set_object_SCALE_X(get_race_scale(
-            character.race.try_into().unwrap(),
-            character.gender.try_into().unwrap(),
-        ))
+        .set_object_SCALE_X(
+            character
+                .race_class
+                .to_race_class()
+                .0
+                .race_scale(PlayerGender::try_from(character.gender).unwrap()),
+        )
         .set_unit_BYTES_0(
             character.race,
             character.class,
             character.gender,
-            get_power_for_class(character.class),
+            character.class.power_type(),
         )
         .set_player_BYTES_2(character.facialhair, 0, 0, 2)
         .set_player_BYTES(
@@ -205,18 +203,20 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
         .set_unit_STAMINA(character.stamina())
         .set_unit_INTELLECT(character.intellect())
         .set_unit_SPIRIT(character.spirit())
-        .set_unit_FACTIONTEMPLATE(get_race_faction(character.race.try_into().unwrap()))
-        .set_unit_DISPLAYID(get_display_id_for_player(
-            character.race.try_into().unwrap(),
-            character.gender.try_into().unwrap(),
-        ))
-        .set_unit_NATIVEDISPLAYID(get_display_id_for_player(
-            character.race.try_into().unwrap(),
-            character.gender.try_into().unwrap(),
-        ))
+        .set_unit_FACTIONTEMPLATE(PlayerRace::try_from(character.race).unwrap().faction_id())
+        .set_unit_DISPLAYID(
+            PlayerRace::try_from(character.race)
+                .unwrap()
+                .display_id(PlayerGender::try_from(character.gender).unwrap()),
+        )
+        .set_unit_NATIVEDISPLAYID(
+            PlayerRace::try_from(character.race)
+                .unwrap()
+                .display_id(PlayerGender::try_from(character.gender).unwrap()),
+        )
         .set_unit_TARGET(character.target);
 
-    for (i, skill) in starter_skills(character.race_class).iter().enumerate() {
+    for (i, skill) in character.race_class.starter_skills().iter().enumerate() {
         mask = mask.set_player_SKILL_INFO(
             SkillInfo::new(*skill, 0, 295, 300, 0, 2),
             SkillInfoIndex::try_from(i as u32).unwrap(),
@@ -296,7 +296,9 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
     v.push(
         SMSG_INITIAL_SPELLS {
             unknown1: 0,
-            initial_spells: starter_spells(character.race_class)
+            initial_spells: character
+                .race_class
+                .starter_spells()
                 .iter()
                 .map(|a| InitialSpell {
                     spell_id: *a,
@@ -375,7 +377,7 @@ pub async fn gm_command(
         return;
     } else if let Some((_, location)) = message.split_once("tp") {
         let location = location.trim();
-        let p = get_position_from_str(location);
+        let p = position_from_str(location);
 
         if let Some(p) = p {
             prepare_teleport(p, client).await;

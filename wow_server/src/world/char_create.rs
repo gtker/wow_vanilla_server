@@ -1,19 +1,21 @@
 use crate::world::character::Character;
 use crate::world::database::WorldDatabase;
-use wow_common::wrath::position::get_starting_position;
-use wow_common::DEFAULT_RUNNING_SPEED;
+use wow_world_base::wrath::RaceClass;
+use wow_world_base::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::wrath::{Area, MovementInfo, Vector3d, CMSG_CHAR_CREATE};
 use wow_world_messages::Guid;
 
 pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Character {
-    let start_zone = get_starting_position(c.race.try_into().unwrap(), c.class);
+    let race_class = RaceClass::try_from((c.race, c.class)).unwrap();
+    let player_race = race_class.to_race_class().0;
+    let start_zone = player_race.wrath_starting_position(c.class);
 
     Character {
         guid: db.new_guid().into(),
         name: c.name,
         race: c.race,
         class: c.class,
-        race_class: (c.race, c.class).try_into().unwrap(),
+        race_class,
         gender: c.gender,
         skin: c.skin_color,
         face: c.face,

@@ -1,5 +1,5 @@
-use wow_common::wrath::position::{get_position, PositionIdentifier};
-use wow_common::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
+use wow_world_base::wrath::position::{position, PositionIdentifier};
+use wow_world_base::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::wrath::UpdateMask;
 use wow_world_messages::wrath::{
     MovementBlock, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo, Object,
@@ -18,7 +18,7 @@ pub struct Creature {
 
 impl Creature {
     pub fn new(name: impl Into<String>) -> Self {
-        let p = get_position(PositionIdentifier::HumanStartZone);
+        let p = position(PositionIdentifier::HumanStartZone);
 
         Self {
             name: name.into(),

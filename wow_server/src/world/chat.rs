@@ -1,5 +1,5 @@
 use crate::world::client::Client;
-use wow_common::range;
+use wow_world_base::range;
 use wow_world_messages::wrath::{
     CMSG_MESSAGECHAT_ChatType, Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType,
     CMSG_MESSAGECHAT, SMSG_MESSAGECHAT,
@@ -30,12 +30,8 @@ pub async fn handle_message(client: &mut Client, clients: &mut [Client], m: CMSG
     };
 
     let chat_type = match m.chat_type {
-        CMSG_MESSAGECHAT_ChatType::Say => SMSG_MESSAGECHAT_ChatType::Say {
-            target6: sender,
-        },
-        CMSG_MESSAGECHAT_ChatType::Yell => SMSG_MESSAGECHAT_ChatType::Yell {
-            target6: sender,
-        },
+        CMSG_MESSAGECHAT_ChatType::Say => SMSG_MESSAGECHAT_ChatType::Say { target6: sender },
+        CMSG_MESSAGECHAT_ChatType::Yell => SMSG_MESSAGECHAT_ChatType::Yell { target6: sender },
         _ => unreachable!(),
     };
 

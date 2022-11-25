@@ -18,7 +18,8 @@ use wow_world_messages::wrath::{
     SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdatePlayerBuilder, Vector3d,
     SMSG_ACCOUNT_DATA_TIMES, SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS,
     SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD,
-    SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
+    SMSG_SPLINE_SET_RUN_SPEED, SMSG_TIME_SYNC_REQ, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS,
+    SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::wrath::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
@@ -311,6 +312,8 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
     );
 
     v.push(get_self_update_object_create_object2(character).into());
+
+    v.push(SMSG_TIME_SYNC_REQ { time_sync: 0 }.into());
 
     v
 }

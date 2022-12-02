@@ -9,14 +9,15 @@ use wow_world_base::wrath::position::{position_from_str, Position};
 use wow_world_base::wrath::trigger::Trigger;
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::wrath::{
-    LogoutResult, LogoutSpeed, SMSG_NAME_QUERY_RESPONSE_DeclinedNames, MSG_MOVE_FALL_LAND,
-    MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH,
-    MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD,
-    MSG_MOVE_START_PITCH_DOWN, MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT,
-    MSG_MOVE_START_STRAFE_RIGHT, MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT,
-    MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP, MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE,
-    MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP_TURN, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
-    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
+    LogoutResult, LogoutSpeed, SMSG_ATTACKERSTATEUPDATE_HitInfo,
+    SMSG_NAME_QUERY_RESPONSE_DeclinedNames, MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP,
+    MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH, MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE,
+    MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD, MSG_MOVE_START_PITCH_DOWN,
+    MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT, MSG_MOVE_START_STRAFE_RIGHT,
+    MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT, MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP,
+    MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE, MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP_TURN,
+    SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_LOGOUT_COMPLETE,
+    SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
 };
 use wow_world_messages::Guid;
 
@@ -57,18 +58,23 @@ pub async fn handle_received_client_opcodes(
                         client
                             .send_system_message(format!("Inside trigger {}", c.trigger_id))
                             .await;
-                        match t.1 {
-                            Trigger::Inn => {
-                                client.send_system_message("Inside inn").await;
-                            }
-                            Trigger::Quest { quest_id } => {
-                                client
-                                    .send_system_message(format!("Inside quest id {}", quest_id))
-                                    .await;
-                            }
-                            Trigger::Teleport { location, .. } => {
-                                client.send_system_message("Inside teleport").await;
-                                world_handler::prepare_teleport(location, client).await
+                        for trigger in t.1 {
+                            match trigger {
+                                Trigger::Inn => {
+                                    client.send_system_message("Inside inn").await;
+                                }
+                                Trigger::Quest { quest_id } => {
+                                    client
+                                        .send_system_message(format!(
+                                            "Inside quest id {}",
+                                            quest_id
+                                        ))
+                                        .await;
+                                }
+                                Trigger::Teleport { location, .. } => {
+                                    client.send_system_message("Inside teleport").await;
+                                    world_handler::prepare_teleport(*location, client).await
+                                }
                             }
                         }
                     }
@@ -437,6 +443,72 @@ pub async fn handle_received_client_opcodes(
             }
             ClientOpcodeMessage::CMSG_UPDATE_ACCOUNT_DATA(_) => {
                 // Do not spam console, mangos also ignores
+            }
+            ClientOpcodeMessage::CMSG_ATTACKSWING(c) => {
+                client.character_mut().target = c.guid;
+
+                for c in &mut *clients {
+                    c.send_message(SMSG_ATTACKSTART {
+                        attacker: client.character().guid,
+                        victim: client.character().target,
+                    })
+                    .await;
+                }
+                client
+                    .send_message(SMSG_ATTACKSTART {
+                        attacker: client.character().guid,
+                        victim: client.character().target,
+                    })
+                    .await;
+
+                client
+                    .send_message(SMSG_ATTACKERSTATEUPDATE {
+                        hit_info: SMSG_ATTACKERSTATEUPDATE_HitInfo::empty().set_CRITICALHIT(),
+                        attacker: client.character().guid,
+                        target: client.character().target,
+                        total_damage: 1337,
+                        overkill: 0,
+                        spell_school_mask: 0,
+                        damage_float: 1337.0,
+                        damage_uint: 1337,
+                        v_state: 0,
+                        unknown1: 0,
+                        unknown2: 0,
+                    })
+                    .await;
+                for c in &mut *clients {
+                    c.send_message(SMSG_ATTACKERSTATEUPDATE {
+                        hit_info: SMSG_ATTACKERSTATEUPDATE_HitInfo::empty().set_CRITICALHIT(),
+                        attacker: client.character().guid,
+                        target: client.character().target,
+                        total_damage: 1337,
+                        overkill: 0,
+                        spell_school_mask: 0,
+                        damage_float: 1337.0,
+                        damage_uint: 1337,
+                        v_state: 0,
+                        unknown1: 0,
+                        unknown2: 0,
+                    })
+                    .await;
+                }
+            }
+            ClientOpcodeMessage::CMSG_ATTACKSTOP(c) => {
+                for c in &mut *clients {
+                    c.send_message(SMSG_ATTACKSTOP {
+                        player: client.character().guid,
+                        enemy: client.character().target,
+                        unknown1: 0,
+                    })
+                    .await;
+                }
+                client
+                    .send_message(SMSG_ATTACKSTOP {
+                        player: client.character().guid,
+                        enemy: client.character().target,
+                        unknown1: 0,
+                    })
+                    .await;
             }
             _ => {
                 dbg!(opcode);

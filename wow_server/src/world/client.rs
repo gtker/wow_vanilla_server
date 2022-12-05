@@ -1,4 +1,5 @@
 use crate::world::character::Character;
+use crate::world::DESIRED_TIMESTEP;
 use std::io::ErrorKind;
 use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedWriteHalf;
@@ -11,7 +12,10 @@ use wow_world_base::geometry::distance_between;
 use wow_world_base::wrath::position::Position;
 use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
-use wow_world_messages::wrath::{Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d, SMSG_MESSAGECHAT, MovementInfo};
+use wow_world_messages::wrath::{
+    Language, MovementInfo, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d,
+    SMSG_MESSAGECHAT,
+};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]

@@ -39,5 +39,7 @@ pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Chara
         },
         movement_speed: DEFAULT_RUNNING_SPEED,
         target: Guid::new(0),
+        attacking: false,
+        auto_attack_timer: 0.0,
     }
 }

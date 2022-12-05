@@ -1,3 +1,4 @@
+use crate::world::DESIRED_TIMESTEP;
 use wow_world_base::wrath::{Class, Map, Race, RaceClass};
 use wow_world_base::BaseStats;
 use wow_world_base::{calculate_health, calculate_mana};
@@ -23,6 +24,8 @@ pub struct Character {
     pub info: MovementInfo,
     pub movement_speed: f32,
     pub target: Guid,
+    pub attacking: bool,
+    pub auto_attack_timer: f32,
 }
 
 impl Character {
@@ -31,6 +34,12 @@ impl Character {
         combo
             .base_stats_for(self.level)
             .unwrap_or(combo.base_stats()[0])
+    }
+
+    pub fn update_auto_attack_timer(&mut self) {
+        if self.auto_attack_timer > 0.0 {
+            self.auto_attack_timer -= DESIRED_TIMESTEP;
+        }
     }
 
     pub fn strength(&self) -> i32 {

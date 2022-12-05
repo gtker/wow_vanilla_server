@@ -6,6 +6,7 @@ use crate::world::database::WorldDatabase;
 use crate::world::world_opcode_handler;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
+use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::wrath::position::{position_from_str, Position};
 use wow_world_base::wrath::{Map, PlayerGender, PlayerRace};
@@ -15,11 +16,11 @@ use wow_world_messages::wrath::{
     InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
     MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
     MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
-    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdatePlayerBuilder, Vector3d,
-    SMSG_ACCOUNT_DATA_TIMES, SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS,
-    SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD,
-    SMSG_SPLINE_SET_RUN_SPEED, SMSG_TIME_SYNC_REQ, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS,
-    SMSG_UPDATE_OBJECT,
+    SMSG_ATTACKERSTATEUPDATE_HitInfo, SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex,
+    UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE,
+    SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED,
+    SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
+    SMSG_TIME_SYNC_REQ, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::wrath::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
@@ -92,6 +93,30 @@ impl World {
                 &mut move_to_character_screen,
             )
             .await;
+            client.character_mut().update_auto_attack_timer();
+
+            if client.character().attacking && client.character().auto_attack_timer <= 0.0 {
+                client.character_mut().auto_attack_timer = UNARMED_SPEED_FLOAT;
+                let msg = SMSG_ATTACKERSTATEUPDATE {
+                    hit_info: SMSG_ATTACKERSTATEUPDATE_HitInfo::empty().set_CRITICALHIT(),
+                    attacker: client.character().guid,
+                    target: client.character().target,
+                    total_damage: 1332,
+                    overkill: 0,
+                    spell_school_mask: 0,
+                    damage_float: 0.0,
+                    damage_uint: 0,
+                    v_state: 0,
+                    unknown1: 0,
+                    unknown2: 0,
+                };
+
+                client.send_message(msg.clone()).await;
+
+                for c in &mut self.clients {
+                    c.send_message(msg.clone()).await;
+                }
+            }
 
             self.clients.insert(i, client);
         }

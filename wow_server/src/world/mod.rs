@@ -42,8 +42,9 @@ pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
     }
 }
 
+pub const DESIRED_TIMESTEP: f32 = 1.0 / 10.0;
+
 async fn run_world(mut world: World, db: WorldDatabase) {
-    const DESIRED_TIMESTEP: f32 = 1.0 / 10.0;
     loop {
         let before = Instant::now();
 
@@ -129,6 +130,8 @@ async fn character_screen(
         info: Default::default(),
         movement_speed: DEFAULT_RUNNING_SPEED,
         target: Guid::new(0),
+        attacking: false,
+        auto_attack_timer: 0.0,
     };
 
     world

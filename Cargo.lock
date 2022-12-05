@@ -567,7 +567,7 @@ checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
 [[package]]
 name = "wow_login_messages"
 version = "0.2.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=e0ed5745c3d74a951ad1418906a79bebf9cb1bbc#e0ed5745c3d74a951ad1418906a79bebf9cb1bbc"
+source = "git+https://github.com/gtker/wow_messages.git?rev=d16fad3180e9fe9a68d8173836291c1acba606c9#d16fad3180e9fe9a68d8173836291c1acba606c9"
 dependencies = [
  "tokio",
 ]
@@ -599,12 +599,12 @@ dependencies = [
 [[package]]
 name = "wow_world_base"
 version = "0.1.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=e0ed5745c3d74a951ad1418906a79bebf9cb1bbc#e0ed5745c3d74a951ad1418906a79bebf9cb1bbc"
+source = "git+https://github.com/gtker/wow_messages.git?rev=d16fad3180e9fe9a68d8173836291c1acba606c9#d16fad3180e9fe9a68d8173836291c1acba606c9"
 
 [[package]]
 name = "wow_world_messages"
 version = "0.0.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=e0ed5745c3d74a951ad1418906a79bebf9cb1bbc#e0ed5745c3d74a951ad1418906a79bebf9cb1bbc"
+source = "git+https://github.com/gtker/wow_messages.git?rev=d16fad3180e9fe9a68d8173836291c1acba606c9#d16fad3180e9fe9a68d8173836291c1acba606c9"
 dependencies = [
  "flate2",
  "tokio",

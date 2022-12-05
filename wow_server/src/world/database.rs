@@ -48,6 +48,8 @@ impl WorldDatabase {
                     },
                     movement_speed: DEFAULT_RUNNING_SPEED,
                     target: Guid::new(0),
+                    attacking: false,
+                    auto_attack_timer: 0.0,
                 },
                 Character {
                     guid: Guid::new(5),
@@ -78,6 +80,8 @@ impl WorldDatabase {
                     },
                     movement_speed: DEFAULT_RUNNING_SPEED,
                     target: Guid::new(0),
+                    attacking: false,
+                    auto_attack_timer: 0.0,
                 },
                 Character {
                     guid: Guid::new(6),
@@ -108,6 +112,8 @@ impl WorldDatabase {
                     },
                     movement_speed: DEFAULT_RUNNING_SPEED,
                     target: Guid::new(0),
+                    attacking: false,
+                    auto_attack_timer: 0.0,
                 },
             ])),
         }

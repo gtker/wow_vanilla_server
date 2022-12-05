@@ -557,25 +557,49 @@ pub async fn gm_command(
     } else if let Some((_, location)) = message.split_once("mark") {
         let name = location.trim();
 
+        if name.is_empty() {
+            client
+                .send_system_message(
+                    ".mark a list of names separated by a comma. Like '.mark Honor Hold, HH`",
+                )
+                .await;
+            return;
+        }
+
         let mut msg = String::with_capacity(128);
 
         use crate::file_utils::append_string_to_file;
         use std::fmt::Write;
         use std::path::Path;
-        writeln!(
+
+        let names = name.split(",").map(|a| a.trim());
+
+        write!(
             msg,
-            "GenPos::new(Position::new(Map::{:?}, {}, {}, {}, {}), vec![\"{}\"]),",
-            client.character().map,
+            "RawPosition::new({}, {}, {}, {}, {}, vec![",
+            client.character().map.as_int(),
             client.character().info.position.x,
             client.character().info.position.y,
             client.character().info.position.z,
             client.character().info.orientation,
-            name,
+        )
+        .unwrap();
+
+        for name in names {
+            write!(msg, "\"{name}\",").unwrap();
+        }
+
+        writeln!(
+            msg,
+            "], ValidVersions::new(false, {tbc}, true)),",
+            tbc = client.character().map.as_int() == 530,
         )
         .unwrap();
 
         println!("{} added {}", client.character().name, msg);
         append_string_to_file(&msg, Path::new("unadded_locations.txt"));
+
+        let msg = format!("You added {}", msg);
 
         client.send_system_message(msg).await
     } else if message == "range" {

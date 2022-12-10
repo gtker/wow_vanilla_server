@@ -403,7 +403,7 @@ pub async fn gm_command(
             .await;
 
         return;
-    } else if let Some((_, location)) = message.split_once("tp") {
+    } else if let Some(location) = message.strip_prefix("tp") {
         let location = location.trim();
         let p = position_from_str(location);
 
@@ -416,7 +416,7 @@ pub async fn gm_command(
         }
 
         return;
-    } else if let Some((_, locations)) = message.split_once("go") {
+    } else if let Some(locations) = message.strip_prefix("go") {
         let locations = locations.trim();
         let coords: Vec<&str> = locations.split_whitespace().collect();
 
@@ -530,7 +530,7 @@ pub async fn gm_command(
                     .await;
             }
         }
-    } else if let Some((_, speed)) = message.split_once("speed") {
+    } else if let Some(speed) = message.strip_prefix("speed") {
         if let Ok(speed) = speed.trim().parse::<f32>() {
             client.character_mut().movement_speed = speed;
             client
@@ -554,7 +554,7 @@ pub async fn gm_command(
                 .send_system_message(format!("Value '{}' is not a valid number", speed))
                 .await;
         }
-    } else if let Some((_, location)) = message.split_once("mark") {
+    } else if let Some(location) = message.strip_prefix("mark") {
         let name = location.trim();
 
         if name.is_empty() {
@@ -625,7 +625,7 @@ pub async fn gm_command(
                 .send_system_message("Unable to find range, no target selected".to_string())
                 .await;
         }
-    } else if let Some((_, distance)) = message.split_once("extend") {
+    } else if let Some(distance) = message.strip_prefix("extend") {
         let distance = distance.trim();
 
         let distance = if let Ok(distance) = distance.parse::<f32>() {

@@ -1,9 +1,12 @@
+mod item_query;
+
 use crate::world::chat::handle_message;
 use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use crate::world::world_handler::announce_character_login;
+use crate::world::world_opcode_handler::item_query::item_to_response;
 use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::wrath::position::{position_from_str, Position};
@@ -12,14 +15,15 @@ use wow_world_base::wrath::CreatureFamily;
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::wrath::{
     LogoutResult, LogoutSpeed, SMSG_ATTACKERSTATEUPDATE_HitInfo,
-    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_NAME_QUERY_RESPONSE_DeclinedNames, MSG_MOVE_FALL_LAND,
-    MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH,
-    MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD,
-    MSG_MOVE_START_PITCH_DOWN, MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT,
-    MSG_MOVE_START_STRAFE_RIGHT, MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT,
-    MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP, MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE,
-    MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP_TURN, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART,
-    SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
+    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_ITEM_QUERY_SINGLE_RESPONSE_found,
+    SMSG_NAME_QUERY_RESPONSE_DeclinedNames, MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP,
+    MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH, MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE,
+    MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD, MSG_MOVE_START_PITCH_DOWN,
+    MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT, MSG_MOVE_START_STRAFE_RIGHT,
+    MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT, MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP,
+    MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE, MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP_TURN,
+    SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE,
+    SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
     SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
 };
 use wow_world_messages::Guid;
@@ -69,17 +73,34 @@ pub async fn handle_received_client_opcodes(
                                 Trigger::Quest { quest_id } => {
                                     client
                                         .send_system_message(format!(
-                                            "Inside quest id {}",
+                                            "    Inside quest id {}",
                                             quest_id
                                         ))
                                         .await;
                                 }
                                 Trigger::Teleport { location, .. } => {
-                                    client.send_system_message("Inside teleport").await;
+                                    client.send_system_message("    Inside teleport").await;
                                     world_handler::prepare_teleport(*location, client).await
                                 }
                             }
                         }
+                    }
+                }
+            }
+            ClientOpcodeMessage::CMSG_ITEM_QUERY_SINGLE(c) => {
+                let item = wow_world_base::wrath::item::lookup_item(c.item);
+                match item {
+                    None => {
+                        client
+                            .send_message(SMSG_ITEM_QUERY_SINGLE_RESPONSE {
+                                item: c.item | 0x80000000,
+                                found: None,
+                            })
+                            .await;
+                    }
+                    Some(item) => {
+                        println!("Sending response for {}", item.name);
+                        client.send_message(item_to_response(item)).await;
                     }
                 }
             }

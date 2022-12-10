@@ -221,6 +221,7 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
             character.haircolor,
         )
         .set_unit_BASE_HEALTH(character.base_health())
+        .set_player_VISIBLE_ITEM_1_ENTRYID(12640)
         .set_unit_HEALTH(character.max_health())
         .set_unit_MAXHEALTH(character.max_health())
         .set_unit_LEVEL(character.level as i32)

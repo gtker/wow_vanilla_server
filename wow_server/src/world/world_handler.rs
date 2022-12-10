@@ -591,8 +591,10 @@ pub async fn gm_command(
 
         writeln!(
             msg,
-            "], ValidVersions::new(false, {tbc}, true)),",
+            "], ValidVersions::new(false, {tbc}, {wrath})),",
             tbc = client.character().map.as_int() == 530,
+            wrath =
+                client.character().map.as_int() == 571 || client.character().map.as_int() == 530,
         )
         .unwrap();
 
@@ -639,6 +641,19 @@ pub async fn gm_command(
 
         p.x = new_location.0;
         p.y = new_location.1;
+
+        prepare_teleport(p, client).await;
+    } else if let Some(distance) = message.strip_prefix("float") {
+        let distance = distance.trim();
+
+        let distance = if let Ok(distance) = distance.parse::<f32>() {
+            distance
+        } else {
+            5.0
+        };
+
+        let mut p = client.position();
+        p.z = p.z + distance;
 
         prepare_teleport(p, client).await;
     }

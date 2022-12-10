@@ -54,6 +54,7 @@ impl Creature {
                             .set_object_SCALE_X(1.0)
                             .set_unit_LEVEL(self.level.into())
                             .set_unit_FACTIONTEMPLATE(16)
+                            .set_object_ENTRY(69)
                             .finalize(),
                     ),
                     movement2: MovementBlock {

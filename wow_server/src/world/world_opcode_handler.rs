@@ -8,17 +8,19 @@ use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::wrath::position::{position_from_str, Position};
 use wow_world_base::wrath::trigger::Trigger;
+use wow_world_base::wrath::CreatureFamily;
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::wrath::{
     LogoutResult, LogoutSpeed, SMSG_ATTACKERSTATEUPDATE_HitInfo,
-    SMSG_NAME_QUERY_RESPONSE_DeclinedNames, MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP,
-    MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH, MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE,
-    MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD, MSG_MOVE_START_PITCH_DOWN,
-    MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT, MSG_MOVE_START_STRAFE_RIGHT,
-    MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT, MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP,
-    MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE, MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP_TURN,
-    SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_LOGOUT_COMPLETE,
-    SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
+    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_NAME_QUERY_RESPONSE_DeclinedNames, MSG_MOVE_FALL_LAND,
+    MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH,
+    MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD,
+    MSG_MOVE_START_PITCH_DOWN, MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT,
+    MSG_MOVE_START_STRAFE_RIGHT, MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT,
+    MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP, MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE,
+    MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP_TURN, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART,
+    SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
+    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
 };
 use wow_world_messages::Guid;
 
@@ -93,6 +95,33 @@ pub async fn handle_received_client_opcodes(
                         gender: character.gender,
                         class: character.class,
                         has_declined_names: SMSG_NAME_QUERY_RESPONSE_DeclinedNames::No,
+                    })
+                    .await;
+            }
+            ClientOpcodeMessage::CMSG_CREATURE_QUERY(c) => {
+                client
+                    .send_message(SMSG_CREATURE_QUERY_RESPONSE {
+                        creature_entry: c.creature,
+                        found: Some(SMSG_CREATURE_QUERY_RESPONSE_found {
+                            name1: "Ghoul".to_string(),
+                            name2: "".to_string(),
+                            name3: "".to_string(),
+                            name4: "".to_string(),
+                            sub_name: "".to_string(),
+                            description: "".to_string(),
+                            type_flags: 0,
+                            creature_type: 0,
+                            creature_family: CreatureFamily::Ghoul,
+                            creature_rank: 0,
+                            kill_credit1: 0,
+                            kill_credit2: 0,
+                            display_ids: [0; 4],
+                            health_multiplier: 1.0,
+                            mana_multiplier: 1.0,
+                            racial_leader: 0,
+                            quest_items: [0; 6],
+                            movement_id: 0,
+                        }),
                     })
                     .await;
             }

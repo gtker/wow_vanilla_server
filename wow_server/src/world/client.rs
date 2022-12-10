@@ -1,5 +1,4 @@
 use crate::world::character::Character;
-use crate::world::DESIRED_TIMESTEP;
 use std::io::ErrorKind;
 use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedWriteHalf;

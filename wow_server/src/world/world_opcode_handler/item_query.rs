@@ -37,7 +37,6 @@ pub fn item_to_response(item: &'static Item) -> SMSG_ITEM_QUERY_SINGLE_RESPONSE 
             max_count: 0,
             stackable: 0,
             container_slots: 0,
-            amount_of_stats: 1,
             stats: vec![ItemStat {
                 item_stat_type: 0,
                 item_stat_value: 100,

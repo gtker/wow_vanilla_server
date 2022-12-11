@@ -180,6 +180,7 @@ pub fn item_to_response(item: &'static Item) -> SMSG_ITEM_QUERY_SINGLE_RESPONSE 
             material: item.material as u32,
             sheath: item.sheath as u32,
             random_property: item.random_property as u32,
+            random_suffix: item.random_suffix as u32,
             block: item.block as u32,
             item_set: item.itemset as u32,
             max_durability: item.max_durability as u32,

@@ -21,7 +21,6 @@ use tokio::time::sleep;
 use wow_srp::normalized_string::NormalizedString;
 use wow_srp::server::SrpServer;
 use wow_srp::wrath_header::ProofSeed;
-use wow_world_base::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::wrath::tokio_expect_client_message;
 use wow_world_messages::wrath::*;
 use wow_world_messages::Guid;
@@ -112,25 +111,12 @@ async fn character_screen(
     .await
     .unwrap();
 
-    let character = character::Character {
-        guid: Default::default(),
-        name: "".to_string(),
-        race_class: Default::default(),
-        gender: Default::default(),
-        skin: 0,
-        face: 0,
-        hairstyle: 0,
-        haircolor: 0,
-        facialhair: 0,
-        level: 0,
-        area: Default::default(),
-        map: Default::default(),
-        info: Default::default(),
-        movement_speed: DEFAULT_RUNNING_SPEED,
-        target: Guid::new(0),
-        attacking: false,
-        auto_attack_timer: 0.0,
-    };
+    let character = character::Character::test_character(
+        Guid::zero(),
+        "",
+        Default::default(),
+        Default::default(),
+    );
 
     world
         .send(Client::new(account_name, character, stream, encryption))

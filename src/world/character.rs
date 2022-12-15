@@ -1,7 +1,8 @@
 use crate::world::DESIRED_TIMESTEP;
+use wow_world_base::tbc::Vector3d;
 use wow_world_base::wrath::{Map, PlayerGender, RaceClass};
-use wow_world_base::BaseStats;
 use wow_world_base::{calculate_health, calculate_mana};
+use wow_world_base::{BaseStats, DEFAULT_RUNNING_SPEED};
 use wow_world_messages::wrath::{Area, CharacterGear, CreatureFamily, MovementInfo, Power};
 use wow_world_messages::Guid;
 
@@ -31,6 +32,61 @@ impl Character {
         self.race_class
             .base_stats_for(self.level)
             .unwrap_or(self.race_class.base_stats()[0])
+    }
+
+    pub fn test_character(
+        guid: Guid,
+        name: impl Into<String>,
+        race_class: RaceClass,
+        gender: PlayerGender,
+    ) -> Self {
+        let mut c = Self::new(guid, name, race_class, gender, 0, 0, 0, 0, 0);
+        c.level = 60;
+        c
+    }
+
+    pub fn new(
+        guid: Guid,
+        name: impl Into<String>,
+        race_class: RaceClass,
+        gender: PlayerGender,
+        skin: u8,
+        face: u8,
+        hair_style: u8,
+        hair_color: u8,
+        facial_hair: u8,
+    ) -> Self {
+        let start = race_class.starting_position();
+        Self {
+            guid,
+            name: name.into(),
+            race_class,
+            gender,
+            skin,
+            face,
+            hairstyle: hair_style,
+            haircolor: hair_color,
+            facialhair: facial_hair,
+            level: 1,
+            area: Default::default(),
+            map: start.map,
+            info: MovementInfo {
+                flags: Default::default(),
+                extra_flags: Default::default(),
+                timestamp: 0,
+                position: Vector3d {
+                    x: start.x,
+                    y: start.y,
+                    z: start.z,
+                },
+                orientation: start.orientation,
+                fall_time: 0.0,
+            },
+            movement_speed: DEFAULT_RUNNING_SPEED,
+            target: Default::default(),
+            attacking: false,
+            auto_attack_timer: 0.0,
+        }
     }
 
     pub fn update_auto_attack_timer(&mut self) {

@@ -1,10 +1,7 @@
 use crate::world::character::Character;
 use std::sync::Arc;
 use std::sync::Mutex;
-use wow_world_base::wrath::position::{position, PositionIdentifier};
 use wow_world_base::wrath::{PlayerGender, RaceClass};
-use wow_world_base::DEFAULT_RUNNING_SPEED;
-use wow_world_messages::wrath::{Area, MovementInfo, Vector3d};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]
@@ -14,101 +11,26 @@ pub struct WorldDatabase {
 
 impl WorldDatabase {
     pub fn new() -> Self {
-        let dev = position(PositionIdentifier::OrcStartZone);
-        let human = position(PositionIdentifier::HumanStartZone);
-
         Self {
             characters_for_all_accounts: Arc::new(Mutex::new(vec![
-                Character {
-                    guid: Guid::new(4),
-                    name: "Dev".to_string(),
-                    race_class: RaceClass::HumanWarrior,
-                    gender: PlayerGender::Female,
-                    skin: 0,
-                    face: 0,
-                    hairstyle: 0,
-                    haircolor: 0,
-                    facialhair: 0,
-                    level: 60,
-                    area: Area::DesignerIsland,
-                    map: dev.map,
-                    info: MovementInfo {
-                        flags: Default::default(),
-                        extra_flags: Default::default(),
-                        timestamp: 0,
-                        position: Vector3d {
-                            x: dev.x,
-                            y: dev.y,
-                            z: dev.z,
-                        },
-                        orientation: dev.orientation,
-                        fall_time: 0.0,
-                    },
-                    movement_speed: DEFAULT_RUNNING_SPEED,
-                    target: Guid::new(0),
-                    attacking: false,
-                    auto_attack_timer: 0.0,
-                },
-                Character {
-                    guid: Guid::new(5),
-                    name: "HumOne".to_string(),
-                    race_class: RaceClass::HumanWarrior,
-                    gender: PlayerGender::Female,
-                    skin: 0,
-                    face: 0,
-                    hairstyle: 0,
-                    haircolor: 0,
-                    facialhair: 0,
-                    level: 60,
-                    area: Default::default(),
-                    map: human.map,
-                    info: MovementInfo {
-                        flags: Default::default(),
-                        extra_flags: Default::default(),
-                        timestamp: 0,
-                        position: Vector3d {
-                            x: human.x,
-                            y: human.y,
-                            z: human.z,
-                        },
-                        orientation: human.orientation,
-                        fall_time: 0.0,
-                    },
-                    movement_speed: DEFAULT_RUNNING_SPEED,
-                    target: Guid::new(0),
-                    attacking: false,
-                    auto_attack_timer: 0.0,
-                },
-                Character {
-                    guid: Guid::new(6),
-                    name: "HumTwo".to_string(),
-                    race_class: RaceClass::HumanWarrior,
-                    gender: PlayerGender::Male,
-                    skin: 0,
-                    face: 0,
-                    hairstyle: 0,
-                    haircolor: 0,
-                    facialhair: 0,
-                    level: 60,
-                    area: Default::default(),
-                    map: human.map,
-                    info: MovementInfo {
-                        flags: Default::default(),
-                        extra_flags: Default::default(),
-                        timestamp: 0,
-                        position: Vector3d {
-                            x: human.x,
-                            y: human.y,
-                            z: human.z,
-                        },
-                        orientation: human.orientation,
-                        fall_time: 0.0,
-                    },
-                    movement_speed: DEFAULT_RUNNING_SPEED,
-                    target: Guid::new(0),
-                    attacking: false,
-                    auto_attack_timer: 0.0,
-                },
+                Character::test_character(
+                    Guid::new(4),
+                    "Dev",
+                    RaceClass::HumanWarrior,
+                    PlayerGender::Female,
+                ),
+                Character::test_character(
+                    Guid::new(5),
+                    "HumOne",
+                    RaceClass::HumanWarrior,
+                    PlayerGender::Female,
+                ),
+                Character::test_character(
+                    Guid::new(6),
+                    "HumTwo",
+                    RaceClass::HumanWarrior,
+                    PlayerGender::Male,
+                ),
             ])),
         }
     }

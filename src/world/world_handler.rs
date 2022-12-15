@@ -1,6 +1,6 @@
 use crate::world::character::Character;
 use crate::world::character_screen_handler::handle_character_screen_opcodes;
-use crate::world::client::{CharacterScreenProgress, Client};
+use crate::world::client::{CharacterScreenClient, CharacterScreenProgress, Client};
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_opcode_handler;
@@ -28,8 +28,8 @@ use wow_world_messages::{DateTime, Guid};
 #[derive(Debug)]
 pub struct World {
     clients: Vec<Client>,
-    clients_on_character_screen: Vec<Client>,
-    clients_waiting_to_join: Receiver<Client>,
+    clients_on_character_screen: Vec<CharacterScreenClient>,
+    clients_waiting_to_join: Receiver<CharacterScreenClient>,
 
     creatures: Vec<Creature>,
 
@@ -37,7 +37,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(rx: Receiver<Client>) -> Self {
+    pub fn new(rx: Receiver<CharacterScreenClient>) -> Self {
         let locations = read_locations();
 
         Self {
@@ -63,7 +63,8 @@ impl World {
             .iter()
             .position(|a| a.status == CharacterScreenProgress::WaitingToLogIn)
         {
-            let mut c = self.clients_on_character_screen.remove(i);
+            let c = self.clients_on_character_screen.remove(i);
+            let mut c = c.into_client();
 
             for client in &mut self.clients {
                 announce_character_login(client, c.character()).await;
@@ -130,6 +131,7 @@ impl World {
                 .position(|a| a.character().guid == guid)
                 .unwrap();
             let c = self.clients.remove(i);
+            let c = c.into_character_screen_client();
 
             self.clients_on_character_screen.push(c);
 

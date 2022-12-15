@@ -8,7 +8,7 @@ mod database;
 mod world_handler;
 pub mod world_opcode_handler;
 
-use crate::world::client::Client;
+use crate::world::client::CharacterScreenClient;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler::World;
 use std::collections::HashMap;
@@ -67,7 +67,7 @@ async fn run_world(mut world: World) {
 async fn character_screen(
     mut stream: TcpStream,
     users: Arc<Mutex<HashMap<String, SrpServer>>>,
-    world: Sender<Client>,
+    world: Sender<CharacterScreenClient>,
 ) {
     let seed = ProofSeed::new();
 
@@ -119,7 +119,12 @@ async fn character_screen(
     );
 
     world
-        .send(Client::new(account_name, character, stream, encryption))
+        .send(CharacterScreenClient::new(
+            account_name,
+            character,
+            stream,
+            encryption,
+        ))
         .await
         .unwrap();
 }

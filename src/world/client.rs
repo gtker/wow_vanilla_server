@@ -37,60 +37,17 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(
-        account_name: String,
-        character: Character,
-        stream: TcpStream,
-        encryption: ServerCrypto,
-    ) -> Self {
-        let (read, write) = stream.into_split();
-        let (encrypter, decrypter) = encryption.split();
-
-        let (client_send, client_recv) = mpsc::channel(32);
-
-        let reader_handle = tokio::spawn(async move {
-            let mut read = read;
-            let mut decrypter = decrypter;
-            loop {
-                let msg =
-                    ClientOpcodeMessage::tokio_read_encrypted(&mut read, &mut decrypter).await;
-                let msg = match msg {
-                    Ok(m) => m,
-                    Err(e) => {
-                        match e {
-                            ExpectedOpcodeError::Opcode { opcode, size, name } => {
-                                let mut v = vec![0_u8; size as usize];
-                                read.read_exact(&mut v).await.unwrap();
-                                dbg!(name, opcode, size, v);
-                            }
-                            ExpectedOpcodeError::Parse(ref p) => match p {
-                                ParseError::Io(i) => match i.kind() {
-                                    ErrorKind::UnexpectedEof => {
-                                        break;
-                                    }
-                                    _ => println!("DC: {:#?}", e),
-                                },
-                                _ => println!("DC: {:#?}", e),
-                            },
-                        }
-                        continue;
-                    }
-                };
-
-                client_send.send(msg).await.unwrap();
-            }
-        });
-
-        Self {
-            character,
-            in_process_of_teleport: false,
-            location_index: 0,
-            status: CharacterScreenProgress::CharacterScreen,
-            received_messages: client_recv,
-            write,
-            encrypter,
-            account_name,
-            reader_handle,
+    pub(crate) fn into_character_screen_client(self) -> CharacterScreenClient {
+        CharacterScreenClient {
+            character: self.character,
+            in_process_of_teleport: self.in_process_of_teleport,
+            location_index: self.location_index,
+            status: self.status,
+            received_messages: self.received_messages,
+            write: self.write,
+            encrypter: self.encrypter,
+            account_name: self.account_name,
+            reader_handle: self.reader_handle,
         }
     }
 
@@ -178,5 +135,119 @@ impl Client {
         } else {
             None
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct CharacterScreenClient {
+    character: Character,
+    pub in_process_of_teleport: bool,
+    pub location_index: usize,
+    pub status: CharacterScreenProgress,
+    received_messages: Receiver<ClientOpcodeMessage>,
+    write: OwnedWriteHalf,
+    encrypter: ServerEncrypterHalf,
+    account_name: String,
+    pub reader_handle: JoinHandle<()>,
+}
+
+impl CharacterScreenClient {
+    pub fn into_client(self) -> Client {
+        Client {
+            character: self.character,
+            in_process_of_teleport: self.in_process_of_teleport,
+            location_index: self.location_index,
+            status: self.status,
+            received_messages: self.received_messages,
+            write: self.write,
+            encrypter: self.encrypter,
+            account_name: self.account_name,
+            reader_handle: self.reader_handle,
+        }
+    }
+
+    pub fn new(
+        account_name: String,
+        character: Character,
+        stream: TcpStream,
+        encryption: ServerCrypto,
+    ) -> Self {
+        let (read, write) = stream.into_split();
+        let (encrypter, decrypter) = encryption.split();
+
+        let (client_send, client_recv) = mpsc::channel(32);
+
+        let reader_handle = tokio::spawn(async move {
+            let mut read = read;
+            let mut decrypter = decrypter;
+            loop {
+                let msg =
+                    ClientOpcodeMessage::tokio_read_encrypted(&mut read, &mut decrypter).await;
+                let msg = match msg {
+                    Ok(m) => m,
+                    Err(e) => {
+                        match e {
+                            ExpectedOpcodeError::Opcode { opcode, size, name } => {
+                                let mut v = vec![0_u8; size as usize];
+                                read.read_exact(&mut v).await.unwrap();
+                                dbg!(name, opcode, size, v);
+                            }
+                            ExpectedOpcodeError::Parse(ref p) => match p {
+                                ParseError::Io(i) => match i.kind() {
+                                    ErrorKind::UnexpectedEof => {
+                                        break;
+                                    }
+                                    _ => println!("DC: {:#?}", e),
+                                },
+                                _ => println!("DC: {:#?}", e),
+                            },
+                        }
+                        continue;
+                    }
+                };
+
+                client_send.send(msg).await.unwrap();
+            }
+        });
+
+        Self {
+            character,
+            in_process_of_teleport: false,
+            location_index: 0,
+            status: CharacterScreenProgress::CharacterScreen,
+            received_messages: client_recv,
+            write,
+            encrypter,
+            account_name,
+            reader_handle,
+        }
+    }
+
+    pub fn character(&self) -> &Character {
+        &self.character
+    }
+
+    pub fn character_mut(&mut self) -> &mut Character {
+        &mut self.character
+    }
+
+    pub fn account_name(&self) -> &str {
+        &self.account_name
+    }
+
+    pub fn received_messages(&mut self) -> &mut Receiver<ClientOpcodeMessage> {
+        &mut self.received_messages
+    }
+
+    pub async fn send_message(&mut self, m: impl ServerMessage + Sync) {
+        m.tokio_write_encrypted_server(&mut self.write, &mut self.encrypter)
+            .await
+            .unwrap();
+    }
+
+    pub async fn send_opcode(&mut self, m: &ServerOpcodeMessage) {
+        m.tokio_write_encrypted_server(&mut self.write, &mut self.encrypter)
+            .await
+            .unwrap();
     }
 }

@@ -1,5 +1,5 @@
 use crate::world::char_create;
-use crate::world::client::{CharacterScreenProgress, Client};
+use crate::world::client::{CharacterScreenClient, CharacterScreenProgress};
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler::get_client_login_messages;
 use wow_world_messages::wrath::opcodes::ClientOpcodeMessage;
@@ -7,7 +7,10 @@ use wow_world_messages::wrath::{
     Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG, SMSG_TIME_SYNC_REQ,
 };
 
-pub async fn handle_character_screen_opcodes(client: &mut Client, db: &mut WorldDatabase) {
+pub async fn handle_character_screen_opcodes(
+    client: &mut CharacterScreenClient,
+    db: &mut WorldDatabase,
+) {
     while let Ok(opcode) = client.received_messages().try_recv() {
         match opcode {
             ClientOpcodeMessage::CMSG_PING(c) => {

@@ -1,5 +1,5 @@
 use crate::world::DESIRED_TIMESTEP;
-use wow_world_base::wrath::{Gender, Map, PlayerGender, RaceClass};
+use wow_world_base::wrath::{Map, PlayerGender, RaceClass};
 use wow_world_base::BaseStats;
 use wow_world_base::{calculate_health, calculate_mana};
 use wow_world_messages::wrath::{Area, CharacterGear, CreatureFamily, MovementInfo, Power};
@@ -31,13 +31,6 @@ impl Character {
         self.race_class
             .base_stats_for(self.level)
             .unwrap_or(self.race_class.base_stats()[0])
-    }
-
-    pub fn network_gender(&self) -> Gender {
-        match self.gender {
-            PlayerGender::Male => Gender::Male,
-            PlayerGender::Female => Gender::Female,
-        }
     }
 
     pub fn update_auto_attack_timer(&mut self) {
@@ -89,14 +82,12 @@ impl Character {
 
 impl From<Character> for wow_world_messages::wrath::Character {
     fn from(e: Character) -> Self {
-        let gender = e.network_gender();
-
         wow_world_messages::wrath::Character {
             guid: e.guid,
             name: e.name,
             race: e.race_class.race().into(),
             class: e.race_class.class(),
-            gender,
+            gender: e.gender.into(),
             skin: e.skin,
             face: e.face,
             hair_style: e.hairstyle,

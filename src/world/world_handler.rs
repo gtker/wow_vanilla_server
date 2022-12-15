@@ -13,11 +13,11 @@ use wow_world_base::wrath::Map;
 use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::wrath::opcodes::ServerOpcodeMessage;
 use wow_world_messages::wrath::{
-    InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
+    DamageInfo, InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
     MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
     MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
     SMSG_ATTACKERSTATEUPDATE_HitInfo, SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex,
-    UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE,
+    UpdatePlayerBuilder, Vector3d, VictimState, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE,
     SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED,
     SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
     SMSG_TIME_SYNC_REQ, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
@@ -103,10 +103,12 @@ impl World {
                     target: client.character().target,
                     total_damage: 1332,
                     overkill: 0,
-                    spell_school_mask: 0,
-                    damage_float: 0.0,
-                    damage_uint: 0,
-                    v_state: 0,
+                    damage_infos: vec![DamageInfo {
+                        spell_school_mask: 0,
+                        damage_float: 1332.0,
+                        damage_uint: 1332,
+                    }],
+                    victim_state: VictimState::empty(),
                     unknown1: 0,
                     unknown2: 0,
                 };
@@ -210,7 +212,7 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
         .set_unit_BYTES_0(
             character.race_class.race().into(),
             character.race_class.class(),
-            character.network_gender(),
+            character.gender.into(),
             character.race_class.class().power_type(),
         )
         .set_player_BYTES_2(character.facialhair, 0, 0, 2)

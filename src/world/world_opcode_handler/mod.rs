@@ -14,9 +14,9 @@ use wow_world_base::wrath::trigger::Trigger;
 use wow_world_base::wrath::CreatureFamily;
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::wrath::{
-    LogoutResult, LogoutSpeed, SMSG_ATTACKERSTATEUPDATE_HitInfo,
-    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_NAME_QUERY_RESPONSE_DeclinedNames, MSG_MOVE_FALL_LAND,
-    MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH,
+    DamageInfo, LogoutResult, LogoutSpeed, SMSG_ATTACKERSTATEUPDATE_HitInfo,
+    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_NAME_QUERY_RESPONSE_DeclinedNames, VictimState,
+    MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH,
     MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD,
     MSG_MOVE_START_PITCH_DOWN, MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT,
     MSG_MOVE_START_STRAFE_RIGHT, MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT,
@@ -107,15 +107,13 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::CMSG_NAME_QUERY(c) => {
                 let character = db.get_character_by_guid(c.guid);
 
-                let gender = character.network_gender();
-
                 client
                     .send_message(SMSG_NAME_QUERY_RESPONSE {
                         guid: c.guid,
                         character_name: character.name,
                         realm_name: "".to_string(),
                         race: character.race_class.race().into(),
-                        gender,
+                        gender: character.gender.into(),
                         class: character.race_class.class(),
                         has_declined_names: SMSG_NAME_QUERY_RESPONSE_DeclinedNames::No,
                     })
@@ -526,10 +524,12 @@ pub async fn handle_received_client_opcodes(
                         target: client.character().target,
                         total_damage: 1337,
                         overkill: 0,
-                        spell_school_mask: 0,
-                        damage_float: 1337.0,
-                        damage_uint: 1337,
-                        v_state: 0,
+                        damage_infos: vec![DamageInfo {
+                            spell_school_mask: 0,
+                            damage_float: 1332.0,
+                            damage_uint: 1332,
+                        }],
+                        victim_state: VictimState::empty(),
                         unknown1: 0,
                         unknown2: 0,
                     })
@@ -541,10 +541,12 @@ pub async fn handle_received_client_opcodes(
                         target: client.character().target,
                         total_damage: 1337,
                         overkill: 0,
-                        spell_school_mask: 0,
-                        damage_float: 1337.0,
-                        damage_uint: 1337,
-                        v_state: 0,
+                        damage_infos: vec![DamageInfo {
+                            spell_school_mask: 0,
+                            damage_float: 1332.0,
+                            damage_uint: 1332,
+                        }],
+                        victim_state: VictimState::empty(),
                         unknown1: 0,
                         unknown2: 0,
                     })

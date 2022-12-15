@@ -7,7 +7,7 @@ use wow_world_messages::wrath::{
     Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG, SMSG_TIME_SYNC_REQ,
 };
 
-pub async fn handle_character_screen_opcodes(client: &mut Client, mut db: WorldDatabase) {
+pub async fn handle_character_screen_opcodes(client: &mut Client, db: &mut WorldDatabase) {
     while let Ok(opcode) = client.received_messages().try_recv() {
         match opcode {
             ClientOpcodeMessage::CMSG_PING(c) => {

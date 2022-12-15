@@ -27,12 +27,10 @@ use wow_world_messages::Guid;
 
 pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
     let listener = TcpListener::bind("0.0.0.0:8085").await.unwrap();
-
-    let db = WorldDatabase::new();
     let (tx, rx) = mpsc::channel(32);
     let world = World::new(rx);
 
-    tokio::spawn(run_world(world, db.clone()));
+    tokio::spawn(run_world(world));
 
     loop {
         let (stream, _) = listener.accept().await.unwrap();
@@ -43,11 +41,13 @@ pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
 
 pub const DESIRED_TIMESTEP: f32 = 1.0 / 10.0;
 
-async fn run_world(mut world: World, db: WorldDatabase) {
+async fn run_world(mut world: World) {
+    let mut db = WorldDatabase::new();
+
     loop {
         let before = Instant::now();
 
-        world.tick(db.clone()).await;
+        world.tick(&mut db).await;
 
         let after = Instant::now();
 

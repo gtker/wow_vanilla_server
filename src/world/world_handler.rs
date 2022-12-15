@@ -49,13 +49,13 @@ impl World {
         }
     }
 
-    pub async fn tick(&mut self, db: WorldDatabase) {
+    pub async fn tick(&mut self, db: &mut WorldDatabase) {
         while let Ok(c) = self.clients_waiting_to_join.try_recv() {
             self.clients_on_character_screen.push(c);
         }
 
         for client in &mut self.clients_on_character_screen {
-            handle_character_screen_opcodes(client, db.clone()).await;
+            handle_character_screen_opcodes(client, db).await;
         }
 
         while let Some(i) = self

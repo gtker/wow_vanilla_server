@@ -107,13 +107,15 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::CMSG_NAME_QUERY(c) => {
                 let character = db.get_character_by_guid(c.guid);
 
+                let gender = character.network_gender();
+
                 client
                     .send_message(SMSG_NAME_QUERY_RESPONSE {
                         guid: c.guid,
                         character_name: character.name,
                         realm_name: "".to_string(),
                         race: character.race_class.race().into(),
-                        gender: character.gender,
+                        gender,
                         class: character.race_class.class(),
                         has_declined_names: SMSG_NAME_QUERY_RESPONSE_DeclinedNames::No,
                     })

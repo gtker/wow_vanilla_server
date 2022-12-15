@@ -30,10 +30,9 @@ pub struct Character {
 
 impl Character {
     fn default_stats(&self) -> BaseStats {
-        let combo = RaceClass::try_from((self.race, self.class)).unwrap();
-        combo
+        self.race_class
             .base_stats_for(self.level)
-            .unwrap_or(combo.base_stats()[0])
+            .unwrap_or(self.race_class.base_stats()[0])
     }
 
     pub fn update_auto_attack_timer(&mut self) {

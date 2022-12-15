@@ -1,5 +1,5 @@
 use crate::world::DESIRED_TIMESTEP;
-use wow_world_base::wrath::{Class, Map, Race, RaceClass};
+use wow_world_base::wrath::{Map, RaceClass};
 use wow_world_base::BaseStats;
 use wow_world_base::{calculate_health, calculate_mana};
 use wow_world_messages::wrath::{Area, CharacterGear, CreatureFamily, Gender, MovementInfo, Power};
@@ -9,8 +9,6 @@ use wow_world_messages::Guid;
 pub struct Character {
     pub guid: Guid,
     pub name: String,
-    pub race: Race,
-    pub class: Class,
     pub race_class: RaceClass,
     pub gender: Gender,
     pub skin: u8,
@@ -58,7 +56,7 @@ impl Character {
     }
 
     pub fn max_mana(&self) -> i32 {
-        if self.class.power_type() == Power::Mana {
+        if self.race_class.class().power_type() == Power::Mana {
             calculate_mana(self.default_stats().mana, self.default_stats().intellect).into()
         } else {
             0
@@ -87,8 +85,8 @@ impl From<Character> for wow_world_messages::wrath::Character {
         wow_world_messages::wrath::Character {
             guid: e.guid,
             name: e.name,
-            race: e.race,
-            class: e.class,
+            race: e.race_class.race().into(),
+            class: e.race_class.class(),
             gender: e.gender,
             skin: e.skin,
             face: e.face,

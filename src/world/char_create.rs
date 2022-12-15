@@ -5,16 +5,14 @@ use wow_world_base::DEFAULT_RUNNING_SPEED;
 use wow_world_messages::wrath::{Area, MovementInfo, Vector3d, CMSG_CHAR_CREATE};
 use wow_world_messages::Guid;
 
-pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Character {
-    let race_class = RaceClass::try_from((c.race, c.class)).unwrap();
+pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Option<Character> {
+    let race_class = RaceClass::try_from((c.race, c.class)).ok()?;
     let player_race = race_class.to_race_class().0;
     let start_zone = player_race.wrath_starting_position(c.class);
 
-    Character {
+    Some(Character {
         guid: db.new_guid().into(),
         name: c.name,
-        race: c.race,
-        class: c.class,
         race_class,
         gender: c.gender,
         skin: c.skin_color,
@@ -41,5 +39,5 @@ pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Chara
         target: Guid::new(0),
         attacking: false,
         auto_attack_timer: 0.0,
-    }
+    })
 }

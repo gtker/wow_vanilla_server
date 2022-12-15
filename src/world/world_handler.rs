@@ -9,7 +9,7 @@ use tokio::sync::mpsc::Receiver;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::wrath::position::{position_from_str, Position};
-use wow_world_base::wrath::{Map, PlayerGender, PlayerRace};
+use wow_world_base::wrath::{Map, PlayerGender};
 use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::wrath::opcodes::ServerOpcodeMessage;
 use wow_world_messages::wrath::{
@@ -208,10 +208,10 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
                 .race_scale(PlayerGender::try_from(character.gender).unwrap()),
         )
         .set_unit_BYTES_0(
-            character.race,
-            character.class,
+            character.race_class.race().into(),
+            character.race_class.class(),
             character.gender,
-            character.class.power_type(),
+            character.race_class.class().power_type(),
         )
         .set_player_BYTES_2(character.facialhair, 0, 0, 2)
         .set_player_BYTES(
@@ -231,15 +231,17 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
         .set_unit_STAMINA(character.stamina())
         .set_unit_INTELLECT(character.intellect())
         .set_unit_SPIRIT(character.spirit())
-        .set_unit_FACTIONTEMPLATE(PlayerRace::try_from(character.race).unwrap().faction_id())
+        .set_unit_FACTIONTEMPLATE(character.race_class.race().faction_id())
         .set_unit_DISPLAYID(
-            PlayerRace::try_from(character.race)
-                .unwrap()
+            character
+                .race_class
+                .race()
                 .display_id(PlayerGender::try_from(character.gender).unwrap()),
         )
         .set_unit_NATIVEDISPLAYID(
-            PlayerRace::try_from(character.race)
-                .unwrap()
+            character
+                .race_class
+                .race()
                 .display_id(PlayerGender::try_from(character.gender).unwrap()),
         )
         .set_unit_TARGET(character.target);

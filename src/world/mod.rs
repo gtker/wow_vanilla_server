@@ -115,8 +115,6 @@ async fn character_screen(
     let character = character::Character {
         guid: Default::default(),
         name: "".to_string(),
-        race: Default::default(),
-        class: Default::default(),
         race_class: Default::default(),
         gender: Default::default(),
         skin: 0,

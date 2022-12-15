@@ -112,9 +112,9 @@ pub async fn handle_received_client_opcodes(
                         guid: c.guid,
                         character_name: character.name,
                         realm_name: "".to_string(),
-                        race: character.race,
+                        race: character.race_class.race().into(),
                         gender: character.gender,
-                        class: character.class,
+                        class: character.race_class.class(),
                         has_declined_names: SMSG_NAME_QUERY_RESPONSE_DeclinedNames::No,
                     })
                     .await;

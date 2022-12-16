@@ -26,7 +26,6 @@ use wow_world_messages::wrath::{
     SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG,
     SMSG_QUERY_TIME_RESPONSE,
 };
-use wow_world_messages::Guid;
 
 pub async fn handle_received_client_opcodes(
     client: &mut Client,
@@ -34,7 +33,7 @@ pub async fn handle_received_client_opcodes(
     creatures: &mut [Creature],
     mut db: WorldDatabase,
     locations: &[(Position, String)],
-    move_to_character_screen: &mut Vec<Guid>,
+    move_to_character_screen: &mut bool,
 ) {
     while let Ok(opcode) = client.received_messages().try_recv() {
         if let Some(info) = opcode.movement_info() {
@@ -211,7 +210,7 @@ pub async fn handle_received_client_opcodes(
                     })
                     .await;
 
-                move_to_character_screen.push(client.character().guid);
+                *move_to_character_screen = true;
                 client.status = CharacterScreenProgress::CharacterScreen;
 
                 db.replace_character_data(client.character().clone());

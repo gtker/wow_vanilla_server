@@ -4,6 +4,7 @@ use crate::world::client::{CharacterScreenClient, CharacterScreenProgress, Clien
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_opcode_handler;
+use std::collections::BTreeSet;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
@@ -81,7 +82,8 @@ impl World {
             self.clients.push(c);
         }
 
-        let mut move_to_character_screen = Vec::with_capacity(128);
+        let mut indices_to_move_to_character_screen = BTreeSet::new();
+        let mut move_to_character_screen = false;
 
         for i in 0..self.clients.len() {
             let mut client = self.clients.remove(i);
@@ -121,27 +123,25 @@ impl World {
                 }
             }
 
+            if move_to_character_screen {
+                indices_to_move_to_character_screen.insert(i);
+            }
+
             self.clients.insert(i, client);
         }
 
-        for guid in move_to_character_screen {
-            let i = self
-                .clients
-                .iter()
-                .position(|a| a.character().guid == guid)
-                .unwrap();
-            let c = self.clients.remove(i);
-            let c = c.into_character_screen_client();
-
-            self.clients_on_character_screen.push(c);
-
+        for i in indices_to_move_to_character_screen.iter().rev() {
+            let c = self.clients.remove(*i);
             for a in &mut self.clients {
                 a.send_message(SMSG_DESTROY_OBJECT {
-                    guid,
+                    guid: c.character().guid,
                     target_died: false,
                 })
                 .await;
             }
+
+            let c = c.into_character_screen_client();
+            self.clients_on_character_screen.push(c);
         }
 
         while let Some((i, _)) = self

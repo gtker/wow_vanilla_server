@@ -1,12 +1,9 @@
-mod item_query;
-
 use crate::world::chat::handle_message;
 use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use crate::world::world_handler::announce_character_login;
-use crate::world::world_opcode_handler::item_query::item_to_response;
 use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::wrath::position::{position_from_str, Position};
@@ -14,10 +11,11 @@ use wow_world_base::wrath::trigger::Trigger;
 use wow_world_base::wrath::CreatureFamily;
 use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::wrath::{
-    DamageInfo, LogoutResult, LogoutSpeed, SMSG_ATTACKERSTATEUPDATE_HitInfo,
-    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_NAME_QUERY_RESPONSE_DeclinedNames, VictimState,
-    MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT, MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH,
-    MSG_MOVE_SET_RUN_MODE, MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD,
+    item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed,
+    SMSG_ATTACKERSTATEUPDATE_HitInfo, SMSG_CREATURE_QUERY_RESPONSE_found,
+    SMSG_NAME_QUERY_RESPONSE_DeclinedNames, VictimState, MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT,
+    MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH, MSG_MOVE_SET_RUN_MODE,
+    MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD,
     MSG_MOVE_START_PITCH_DOWN, MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT,
     MSG_MOVE_START_STRAFE_RIGHT, MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT,
     MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP, MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE,
@@ -99,7 +97,7 @@ pub async fn handle_received_client_opcodes(
                     }
                     Some(item) => {
                         println!("Sending response for {}", item.name);
-                        client.send_message(item_to_response(item)).await;
+                        client.send_message(item_to_query_response(item)).await;
                     }
                 }
             }

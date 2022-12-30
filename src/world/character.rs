@@ -1,6 +1,5 @@
 use crate::world::DESIRED_TIMESTEP;
-use wow_world_base::tbc::Vector3d;
-use wow_world_base::wrath::{Map, PlayerGender, RaceClass};
+use wow_world_base::wrath::{Map, PlayerGender, RaceClass, Vector3d};
 use wow_world_base::{calculate_health, calculate_mana};
 use wow_world_base::{BaseStats, DEFAULT_RUNNING_SPEED};
 use wow_world_messages::wrath::{Area, CharacterGear, CreatureFamily, MovementInfo, Power};

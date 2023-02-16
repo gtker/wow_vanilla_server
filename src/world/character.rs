@@ -1,8 +1,8 @@
 use crate::world::DESIRED_TIMESTEP;
-use wow_world_base::wrath::{Map, PlayerGender, RaceClass, Vector3d};
+use wow_world_base::vanilla::{Map, PlayerGender, RaceClass, Vector3d};
 use wow_world_base::{calculate_health, calculate_mana};
 use wow_world_base::{BaseStats, DEFAULT_RUNNING_SPEED};
-use wow_world_messages::wrath::{Area, CharacterGear, CreatureFamily, MovementInfo, Power};
+use wow_world_messages::vanilla::{Area, CharacterGear, CreatureFamily, MovementInfo, Power};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]
@@ -71,7 +71,6 @@ impl Character {
             map: start.map,
             info: MovementInfo {
                 flags: Default::default(),
-                extra_flags: Default::default(),
                 timestamp: 0,
                 position: Vector3d {
                     x: start.x,
@@ -135,9 +134,9 @@ impl Character {
     }
 }
 
-impl From<Character> for wow_world_messages::wrath::Character {
+impl From<Character> for wow_world_messages::vanilla::Character {
     fn from(e: Character) -> Self {
-        wow_world_messages::wrath::Character {
+        wow_world_messages::vanilla::Character {
             guid: e.guid,
             name: e.name,
             race: e.race_class.race().into(),
@@ -153,13 +152,12 @@ impl From<Character> for wow_world_messages::wrath::Character {
             map: e.map,
             position: e.info.position,
             guild_id: 0,
-            flags: 0,
-            recustomization_flags: 0,
+            flags: Default::default(),
             first_login: false,
             pet_display_id: 0,
             pet_level: 0,
             pet_family: CreatureFamily::None,
-            equipment: [CharacterGear::default(); 23],
+            equipment: [CharacterGear::default(); 19],
         }
     }
 }

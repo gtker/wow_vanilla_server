@@ -1,5 +1,5 @@
 use crate::world::character::Character;
-use wow_world_base::wrath::{PlayerGender, RaceClass};
+use wow_world_base::vanilla::{PlayerGender, RaceClass};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]

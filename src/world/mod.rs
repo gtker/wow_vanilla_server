@@ -20,9 +20,9 @@ use tokio::sync::mpsc::Sender;
 use tokio::time::sleep;
 use wow_srp::normalized_string::NormalizedString;
 use wow_srp::server::SrpServer;
-use wow_srp::wrath_header::ProofSeed;
-use wow_world_messages::wrath::tokio_expect_client_message;
-use wow_world_messages::wrath::*;
+use wow_srp::vanilla_header::ProofSeed;
+use wow_world_messages::vanilla::tokio_expect_client_message;
+use wow_world_messages::vanilla::*;
 use wow_world_messages::Guid;
 
 pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
@@ -72,9 +72,7 @@ async fn character_screen(
     let seed = ProofSeed::new();
 
     SMSG_AUTH_CHALLENGE {
-        unknown1: 0,
         server_seed: seed.seed(),
-        seed: [0; 32],
     }
     .tokio_write_unencrypted_server(&mut stream)
     .await
@@ -101,10 +99,9 @@ async fn character_screen(
 
     SMSG_AUTH_RESPONSE {
         result: SMSG_AUTH_RESPONSE_WorldResult::AuthOk {
-            billing_flags: BillingPlanFlags::empty(),
+            billing_flags: 0,
             billing_rested: 0,
             billing_time: 0,
-            expansion: Expansion::WrathOfTheLichLing,
         },
     }
     .tokio_write_encrypted_server(&mut stream, encryption.encrypter())

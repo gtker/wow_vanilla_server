@@ -6,12 +6,12 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
-use wow_srp::wrath_header::{ServerCrypto, ServerEncrypterHalf};
+use wow_srp::vanilla_header::{EncrypterHalf, HeaderCrypto};
 use wow_world_base::geometry::distance_between;
-use wow_world_base::wrath::position::Position;
+use wow_world_base::vanilla::position::Position;
 use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
-use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
-use wow_world_messages::wrath::{
+use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
+use wow_world_messages::vanilla::{
     Language, MovementInfo, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d,
     SMSG_MESSAGECHAT,
 };
@@ -31,7 +31,7 @@ pub struct Client {
     pub status: CharacterScreenProgress,
     received_messages: Receiver<ClientOpcodeMessage>,
     write: OwnedWriteHalf,
-    encrypter: ServerEncrypterHalf,
+    encrypter: EncrypterHalf,
     account_name: String,
     pub reader_handle: JoinHandle<()>,
 }
@@ -86,11 +86,9 @@ impl Client {
     pub async fn send_system_message(&mut self, s: impl Into<String>) {
         self.send_message(SMSG_MESSAGECHAT {
             chat_type: SMSG_MESSAGECHAT_ChatType::System {
-                target6: Guid::new(0),
+                sender2: Guid::new(0),
             },
             language: Language::Universal,
-            sender: 0.into(),
-            flags: 0,
             message: s.into(),
             tag: PlayerChatTag::None,
         })
@@ -146,7 +144,7 @@ pub struct CharacterScreenClient {
     pub status: CharacterScreenProgress,
     received_messages: Receiver<ClientOpcodeMessage>,
     write: OwnedWriteHalf,
-    encrypter: ServerEncrypterHalf,
+    encrypter: EncrypterHalf,
     account_name: String,
     pub reader_handle: JoinHandle<()>,
 }
@@ -170,7 +168,7 @@ impl CharacterScreenClient {
         account_name: String,
         character: Character,
         stream: TcpStream,
-        encryption: ServerCrypto,
+        encryption: HeaderCrypto,
     ) -> Self {
         let (read, write) = stream.into_split();
         let (encrypter, decrypter) = encryption.split();

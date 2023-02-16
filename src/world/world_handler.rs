@@ -9,21 +9,21 @@ use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::geometry::trace_point_2d;
-use wow_world_base::wrath::position::{position_from_str, Position};
-use wow_world_base::wrath::Map;
+use wow_world_base::vanilla::position::{position_from_str, Position};
+use wow_world_base::vanilla::{HitInfo, Map};
 use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
-use wow_world_messages::wrath::opcodes::ServerOpcodeMessage;
-use wow_world_messages::wrath::{
+use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
+use wow_world_messages::vanilla::{
     DamageInfo, InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
     MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
     MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
-    SMSG_ATTACKERSTATEUPDATE_HitInfo, SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex,
-    UpdatePlayerBuilder, Vector3d, VictimState, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE,
-    SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED,
+    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdatePlayerBuilder, Vector3d,
+    SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE, SMSG_DESTROY_OBJECT,
+    SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED,
     SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
-    SMSG_TIME_SYNC_REQ, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
+    SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
-use wow_world_messages::wrath::{UpdateMask, Vector2d};
+use wow_world_messages::vanilla::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
 
 #[derive(Debug)]
@@ -101,19 +101,21 @@ impl World {
             if client.character().attacking && client.character().auto_attack_timer <= 0.0 {
                 client.character_mut().auto_attack_timer = UNARMED_SPEED_FLOAT;
                 let msg = SMSG_ATTACKERSTATEUPDATE {
-                    hit_info: SMSG_ATTACKERSTATEUPDATE_HitInfo::empty().set_CRITICALHIT(),
+                    hit_info: HitInfo::CriticalHit,
                     attacker: client.character().guid,
                     target: client.character().target,
                     total_damage: 1332,
-                    overkill: 0,
-                    damage_infos: vec![DamageInfo {
+                    damages: vec![DamageInfo {
                         spell_school_mask: 0,
                         damage_float: 1332.0,
                         damage_uint: 1332,
+                        absorb: 0,
+                        resist: 0,
                     }],
-                    victim_state: VictimState::empty(),
                     unknown1: 0,
-                    unknown2: 0,
+                    spell_id: 0,
+                    damage_state: 0,
+                    blocked_amount: 0,
                 };
 
                 client.send_message(msg.clone()).await;
@@ -135,7 +137,6 @@ impl World {
             for a in &mut self.clients {
                 a.send_message(SMSG_DESTROY_OBJECT {
                     guid: c.character().guid,
-                    target_died: false,
                 })
                 .await;
             }
@@ -170,6 +171,7 @@ pub fn get_self_update_object_create_object2(character: &Character) -> SMSG_UPDA
 
 pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OBJECT {
     SMSG_UPDATE_OBJECT {
+        has_transport: 0,
         objects: vec![Object {
             update_type: Object_UpdateType::CreateObject2 {
                 guid3: character.guid,
@@ -177,16 +179,12 @@ pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OB
                 movement2: MovementBlock {
                     update_flag: MovementBlock_UpdateFlag::new_LIVING(
                         MovementBlock_UpdateFlag_Living::Living {
-                            backwards_flight_speed: 0.0,
                             backwards_running_speed: DEFAULT_RUNNING_BACKWARDS_SPEED,
                             backwards_swimming_speed: 0.0,
-                            extra_flags: Default::default(),
                             fall_time: 0.0,
                             flags: MovementBlock_MovementFlags::empty(),
-                            flight_speed: 0.0,
                             living_orientation: character.info.orientation,
                             living_position: character.info.position,
-                            pitch_rate: 0.0,
                             running_speed: character.movement_speed,
                             swimming_speed: 0.0,
                             timestamp: 0,
@@ -218,15 +216,15 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
             character.race_class.class().power_type(),
         )
         .set_player_BYTES_2(character.facialhair, 0, 0, 2)
-        .set_player_BYTES(
+        .set_player_FEATURES(
             character.skin,
             character.face,
             character.hairstyle,
             character.haircolor,
         )
         .set_unit_BASE_HEALTH(character.base_health())
-        .set_player_VISIBLE_ITEM_1_ENTRYID(12640) // Lionheart Helm
-        .set_player_VISIBLE_ITEM_5_ENTRYID(11726)
+        .set_player_VISIBLE_ITEM_1_0(12640) // Lionheart Helm
+        .set_player_VISIBLE_ITEM_5_0(11726)
         .set_unit_HEALTH(character.max_health())
         .set_unit_MAXHEALTH(character.max_health())
         .set_unit_LEVEL(character.level as i32)
@@ -235,7 +233,7 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
         .set_unit_STAMINA(character.stamina())
         .set_unit_INTELLECT(character.intellect())
         .set_unit_SPIRIT(character.spirit())
-        .set_unit_FACTIONTEMPLATE(character.race_class.race().faction_id())
+        .set_unit_FACTIONTEMPLATE(character.race_class.race().faction_id().as_int() as i32)
         .set_unit_DISPLAYID(character.race_class.race().display_id(character.gender))
         .set_unit_NATIVEDISPLAYID(character.race_class.race().display_id(character.gender))
         .set_unit_TARGET(character.target);
@@ -276,7 +274,6 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
                 minute,
             ),
             timescale: 1.0 / 60.0,
-            unknown1: 0,
         },
     ));
 
@@ -289,12 +286,7 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
     ));
 
     v.push(ServerOpcodeMessage::SMSG_ACCOUNT_DATA_TIMES(
-        SMSG_ACCOUNT_DATA_TIMES {
-            unix_time: 0,
-            unknown1: 0,
-            mask: Default::default(),
-            data: Vec::new(),
-        },
+        SMSG_ACCOUNT_DATA_TIMES { data: [0; 32] },
     ));
 
     v.push(ServerOpcodeMessage::SMSG_TUTORIAL_FLAGS(
@@ -308,11 +300,9 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
 
     v.push(ServerOpcodeMessage::SMSG_MESSAGECHAT(SMSG_MESSAGECHAT {
         chat_type: SMSG_MESSAGECHAT_ChatType::System {
-            target6: Guid::new(0),
+            sender2: Guid::zero(),
         },
         language: Language::Universal,
-        sender: 0.into(),
-        flags: 0,
         message: "Patch 3.3.5: Whatever is now live!".to_string(),
         tag: PlayerChatTag::None,
     }));
@@ -325,7 +315,7 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
                 .starter_spells()
                 .iter()
                 .map(|a| InitialSpell {
-                    spell_id: *a,
+                    spell_id: *a as u16,
                     unknown1: 0,
                 })
                 .collect(),
@@ -335,8 +325,6 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
     );
 
     v.push(get_self_update_object_create_object2(character).into());
-
-    v.push(SMSG_TIME_SYNC_REQ { time_sync: 0 }.into());
 
     v
 }
@@ -535,7 +523,6 @@ pub async fn gm_command(
                 .send_message(SMSG_FORCE_RUN_SPEED_CHANGE {
                     guid: client.character().guid,
                     move_event: 0,
-                    unknown: 0,
                     speed,
                 })
                 .await;
@@ -589,9 +576,9 @@ pub async fn gm_command(
 
         writeln!(
             msg,
-            "], ValidVersions::new(false, {tbc}, {wrath})),",
+            "], ValidVersions::new(false, {tbc}, {vanilla})),",
             tbc = client.character().map.as_int() == 530,
-            wrath =
+            vanilla =
                 client.character().map.as_int() == 571 || client.character().map.as_int() == 530,
         )
         .unwrap();
@@ -665,7 +652,6 @@ pub async fn prepare_teleport(p: Position, client: &mut Client) {
                 movement_counter: 0,
                 info: MovementInfo {
                     flags: MovementInfo_MovementFlags::empty(),
-                    extra_flags: Default::default(),
                     timestamp: 0,
                     position: Vector3d {
                         x: p.x,

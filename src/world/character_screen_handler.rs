@@ -2,9 +2,9 @@ use crate::world::char_create;
 use crate::world::client::{CharacterScreenClient, CharacterScreenProgress};
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler::get_client_login_messages;
-use wow_world_messages::wrath::opcodes::ClientOpcodeMessage;
-use wow_world_messages::wrath::{
-    Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG, SMSG_TIME_SYNC_REQ,
+use wow_world_messages::vanilla::opcodes::ClientOpcodeMessage;
+use wow_world_messages::vanilla::{
+    Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG,
 };
 
 pub async fn handle_character_screen_opcodes(
@@ -60,10 +60,6 @@ pub async fn handle_character_screen_opcodes(
                 for m in get_client_login_messages(client.character()) {
                     client.send_opcode(&m).await;
                 }
-
-                client
-                    .send_message(SMSG_TIME_SYNC_REQ { time_sync: 0 })
-                    .await;
             }
             e => {
                 dbg!(e);

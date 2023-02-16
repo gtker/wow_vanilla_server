@@ -1,7 +1,7 @@
 use crate::world::character::Character;
 use crate::world::database::WorldDatabase;
-use wow_world_base::wrath::{PlayerGender, RaceClass};
-use wow_world_messages::wrath::CMSG_CHAR_CREATE;
+use wow_world_base::vanilla::{PlayerGender, RaceClass};
+use wow_world_messages::vanilla::CMSG_CHAR_CREATE;
 
 pub(crate) fn create_character(c: CMSG_CHAR_CREATE, db: &WorldDatabase) -> Option<Character> {
     let race_class = RaceClass::try_from((c.race, c.class)).ok()?;

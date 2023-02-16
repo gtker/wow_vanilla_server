@@ -565,9 +565,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
 
 [[package]]
+name = "wow_items"
+version = "0.1.0"
+dependencies = [
+ "wow_world_base",
+]
+
+[[package]]
 name = "wow_login_messages"
 version = "0.2.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=49cc7a07c267740de9563b7a92da67614357ca6e#49cc7a07c267740de9563b7a92da67614357ca6e"
 dependencies = [
  "tokio",
 ]
@@ -590,6 +596,7 @@ name = "wow_vanilla_server"
 version = "0.0.0"
 dependencies = [
  "tokio",
+ "wow_items",
  "wow_login_messages",
  "wow_srp",
  "wow_world_base",
@@ -599,12 +606,10 @@ dependencies = [
 [[package]]
 name = "wow_world_base"
 version = "0.1.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=49cc7a07c267740de9563b7a92da67614357ca6e#49cc7a07c267740de9563b7a92da67614357ca6e"
 
 [[package]]
 name = "wow_world_messages"
 version = "0.0.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=49cc7a07c267740de9563b7a92da67614357ca6e#49cc7a07c267740de9563b7a92da67614357ca6e"
 dependencies = [
  "flate2",
  "tokio",

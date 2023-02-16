@@ -6,23 +6,23 @@ use crate::world::world_handler;
 use crate::world::world_handler::announce_character_login;
 use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
-use wow_world_base::wrath::position::{position_from_str, Position};
-use wow_world_base::wrath::trigger::Trigger;
-use wow_world_base::wrath::CreatureFamily;
-use wow_world_messages::wrath::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
-use wow_world_messages::wrath::{
-    item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed,
-    SMSG_ATTACKERSTATEUPDATE_HitInfo, SMSG_CREATURE_QUERY_RESPONSE_found,
-    SMSG_NAME_QUERY_RESPONSE_DeclinedNames, VictimState, MSG_MOVE_FALL_LAND, MSG_MOVE_HEARTBEAT,
-    MSG_MOVE_JUMP, MSG_MOVE_SET_FACING, MSG_MOVE_SET_PITCH, MSG_MOVE_SET_RUN_MODE,
-    MSG_MOVE_SET_WALK_MODE, MSG_MOVE_START_BACKWARD, MSG_MOVE_START_FORWARD,
-    MSG_MOVE_START_PITCH_DOWN, MSG_MOVE_START_PITCH_UP, MSG_MOVE_START_STRAFE_LEFT,
-    MSG_MOVE_START_STRAFE_RIGHT, MSG_MOVE_START_SWIM, MSG_MOVE_START_TURN_LEFT,
-    MSG_MOVE_START_TURN_RIGHT, MSG_MOVE_STOP, MSG_MOVE_STOP_PITCH, MSG_MOVE_STOP_STRAFE,
-    MSG_MOVE_STOP_SWIM, MSG_MOVE_STOP_TURN, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART,
-    SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE, SMSG_ITEM_QUERY_SINGLE_RESPONSE,
-    SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG,
-    SMSG_QUERY_TIME_RESPONSE,
+use wow_world_base::vanilla::position::{position_from_str, Position};
+use wow_world_base::vanilla::trigger::Trigger;
+use wow_world_base::vanilla::{CreatureFamily, HitInfo};
+use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
+use wow_world_messages::vanilla::{
+    item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed, MSG_MOVE_FALL_LAND_Server,
+    MSG_MOVE_HEARTBEAT_Server, MSG_MOVE_JUMP_Server, MSG_MOVE_SET_FACING_Server,
+    MSG_MOVE_SET_PITCH_Server, MSG_MOVE_SET_RUN_MODE_Server, MSG_MOVE_SET_WALK_MODE_Server,
+    MSG_MOVE_START_BACKWARD_Server, MSG_MOVE_START_FORWARD_Server,
+    MSG_MOVE_START_PITCH_DOWN_Server, MSG_MOVE_START_PITCH_UP_Server,
+    MSG_MOVE_START_STRAFE_LEFT_Server, MSG_MOVE_START_STRAFE_RIGHT_Server,
+    MSG_MOVE_START_SWIM_Server, MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server,
+    MSG_MOVE_STOP_PITCH_Server, MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server,
+    MSG_MOVE_STOP_Server, MSG_MOVE_STOP_TURN_Server, SMSG_CREATURE_QUERY_RESPONSE_found,
+    SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE,
+    SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
+    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
 };
 
 pub async fn handle_received_client_opcodes(
@@ -47,18 +47,18 @@ pub async fn handle_received_client_opcodes(
                     z: client.character().info.position.z,
                     orientation: client.character().info.orientation,
                 };
-                match wow_world_base::wrath::trigger::verify_trigger(pos, c.trigger_id) {
-                    wow_world_base::wrath::trigger::TriggerResult::NotFound => {
+                match wow_world_base::vanilla::trigger::verify_trigger(pos, c.trigger_id) {
+                    wow_world_base::vanilla::trigger::TriggerResult::NotFound => {
                         client
                             .send_system_message(format!("Trigger {} not found", c.trigger_id))
                             .await;
                     }
-                    wow_world_base::wrath::trigger::TriggerResult::NotInsideTrigger(_) => {
+                    wow_world_base::vanilla::trigger::TriggerResult::NotInsideTrigger(_) => {
                         client
                             .send_system_message(format!("Not inside trigger {}", c.trigger_id))
                             .await;
                     }
-                    wow_world_base::wrath::trigger::TriggerResult::Success(t) => {
+                    wow_world_base::vanilla::trigger::TriggerResult::Success(t) => {
                         client
                             .send_system_message(format!("Inside trigger {}", c.trigger_id))
                             .await;
@@ -85,7 +85,7 @@ pub async fn handle_received_client_opcodes(
                 }
             }
             ClientOpcodeMessage::CMSG_ITEM_QUERY_SINGLE(c) => {
-                let item = wow_world_base::wrath::item::lookup_item(c.item);
+                let item = wow_items::vanilla::lookup_item(c.item);
                 match item {
                     None => {
                         client
@@ -96,7 +96,7 @@ pub async fn handle_received_client_opcodes(
                             .await;
                     }
                     Some(item) => {
-                        println!("Sending response for {}", item.name);
+                        println!("Sending response for {}", item.name());
                         client.send_message(item_to_query_response(item)).await;
                     }
                 }
@@ -112,7 +112,6 @@ pub async fn handle_received_client_opcodes(
                         race: character.race_class.race().into(),
                         gender: character.gender.into(),
                         class: character.race_class.class(),
-                        has_declined_names: SMSG_NAME_QUERY_RESPONSE_DeclinedNames::No,
                     })
                     .await;
             }
@@ -126,19 +125,15 @@ pub async fn handle_received_client_opcodes(
                             name3: "".to_string(),
                             name4: "".to_string(),
                             sub_name: "".to_string(),
-                            description: "".to_string(),
                             type_flags: 0,
                             creature_type: 0,
-                            creature_family: CreatureFamily::Ghoul,
+                            creature_family: CreatureFamily::None,
                             creature_rank: 0,
-                            kill_credit1: 0,
-                            kill_credit2: 0,
-                            display_ids: [0; 4],
-                            health_multiplier: 1.0,
-                            mana_multiplier: 1.0,
+                            unknown0: 0,
+                            spell_data_id: 0,
+                            display_id: 0,
+                            civilian: 0,
                             racial_leader: 0,
-                            quest_items: [0; 6],
-                            movement_id: 0,
                         }),
                     })
                     .await;
@@ -225,14 +220,13 @@ pub async fn handle_received_client_opcodes(
                             .duration_since(SystemTime::UNIX_EPOCH)
                             .unwrap()
                             .as_secs() as u32,
-                        time_until_daily_quest_reset: 0,
                     })
                     .await;
             }
             ClientOpcodeMessage::MSG_MOVE_START_FORWARD(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_FORWARD {
+                    MSG_MOVE_START_FORWARD_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -244,7 +238,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_BACKWARD(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_BACKWARD {
+                    MSG_MOVE_START_BACKWARD_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -256,7 +250,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_STOP(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_STOP {
+                    MSG_MOVE_STOP_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -268,7 +262,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_STRAFE_LEFT(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_STRAFE_LEFT {
+                    MSG_MOVE_START_STRAFE_LEFT_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -280,7 +274,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_STRAFE_RIGHT(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_STRAFE_RIGHT {
+                    MSG_MOVE_START_STRAFE_RIGHT_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -292,7 +286,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_STOP_STRAFE(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_STRAFE {
+                    MSG_MOVE_STOP_STRAFE_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -304,7 +298,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_JUMP(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_JUMP {
+                    MSG_MOVE_JUMP_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -316,7 +310,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_TURN_LEFT(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_TURN_LEFT {
+                    MSG_MOVE_START_TURN_LEFT_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -328,7 +322,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_TURN_RIGHT(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_TURN_RIGHT {
+                    MSG_MOVE_START_TURN_RIGHT_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -340,7 +334,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_STOP_TURN(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_TURN {
+                    MSG_MOVE_STOP_TURN_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -352,7 +346,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_PITCH_UP(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_PITCH_UP {
+                    MSG_MOVE_START_PITCH_UP_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -364,7 +358,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_PITCH_DOWN(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_PITCH_DOWN {
+                    MSG_MOVE_START_PITCH_DOWN_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -376,7 +370,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_STOP_PITCH(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_PITCH {
+                    MSG_MOVE_STOP_PITCH_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -388,7 +382,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_SET_RUN_MODE(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_SET_RUN_MODE {
+                    MSG_MOVE_SET_RUN_MODE_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -400,7 +394,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_SET_WALK_MODE(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_SET_WALK_MODE {
+                    MSG_MOVE_SET_WALK_MODE_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -412,7 +406,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_FALL_LAND(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_FALL_LAND {
+                    MSG_MOVE_FALL_LAND_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -424,7 +418,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_START_SWIM(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_START_SWIM {
+                    MSG_MOVE_START_SWIM_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -436,7 +430,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_STOP_SWIM(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_STOP_SWIM {
+                    MSG_MOVE_STOP_SWIM_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -448,7 +442,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_SET_FACING(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_SET_FACING {
+                    MSG_MOVE_SET_FACING_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -460,7 +454,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_SET_PITCH(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_SET_PITCH {
+                    MSG_MOVE_SET_PITCH_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -472,7 +466,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::MSG_MOVE_HEARTBEAT(c) => {
                 client.set_movement_info(c.info.clone());
                 send_movement_to_clients(
-                    MSG_MOVE_HEARTBEAT {
+                    MSG_MOVE_HEARTBEAT_Server {
                         guid: client.character().guid,
                         info: c.info,
                     }
@@ -516,36 +510,40 @@ pub async fn handle_received_client_opcodes(
 
                 client
                     .send_message(SMSG_ATTACKERSTATEUPDATE {
-                        hit_info: SMSG_ATTACKERSTATEUPDATE_HitInfo::empty().set_CRITICALHIT(),
+                        hit_info: HitInfo::CriticalHit,
                         attacker: client.character().guid,
                         target: client.character().target,
                         total_damage: 1337,
-                        overkill: 0,
-                        damage_infos: vec![DamageInfo {
+                        damages: vec![DamageInfo {
                             spell_school_mask: 0,
                             damage_float: 1332.0,
                             damage_uint: 1332,
+                            absorb: 0,
+                            resist: 0,
                         }],
-                        victim_state: VictimState::empty(),
                         unknown1: 0,
-                        unknown2: 0,
+                        spell_id: 0,
+                        damage_state: 0,
+                        blocked_amount: 0,
                     })
                     .await;
                 for c in &mut *clients {
                     c.send_message(SMSG_ATTACKERSTATEUPDATE {
-                        hit_info: SMSG_ATTACKERSTATEUPDATE_HitInfo::empty().set_CRITICALHIT(),
+                        hit_info: HitInfo::CriticalHit,
                         attacker: client.character().guid,
                         target: client.character().target,
                         total_damage: 1337,
-                        overkill: 0,
-                        damage_infos: vec![DamageInfo {
+                        damages: vec![DamageInfo {
                             spell_school_mask: 0,
                             damage_float: 1332.0,
                             damage_uint: 1332,
+                            absorb: 0,
+                            resist: 0,
                         }],
-                        victim_state: VictimState::empty(),
                         unknown1: 0,
-                        unknown2: 0,
+                        spell_id: 0,
+                        damage_state: 0,
+                        blocked_amount: 0,
                     })
                     .await;
                 }

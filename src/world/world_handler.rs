@@ -10,19 +10,22 @@ use tokio::sync::mpsc::Receiver;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::vanilla::position::{position_from_str, Position};
-use wow_world_base::vanilla::{HitInfo, Map, NewItemChatAlert, NewItemCreationType, NewItemSource};
+use wow_world_base::vanilla::{
+    HitInfo, Map, NewItemChatAlert, NewItemCreationType, NewItemSource, SplineFlag,
+};
 use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
 use wow_world_messages::vanilla::{
-    DamageInfo, InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
-    MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_All,
-    MovementBlock_UpdateFlag_Living, MovementInfo, MovementInfo_MovementFlags, Object, ObjectType,
-    Object_UpdateType, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex,
-    UpdateItemBuilder, UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES,
-    SMSG_ATTACKERSTATEUPDATE, SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE,
-    SMSG_INITIAL_SPELLS, SMSG_ITEM_PUSH_RESULT, SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD,
-    SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING,
-    SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
+    CompressedMove, CompressedMove_CompressedMoveOpcode, DamageInfo, InitialSpell, Language,
+    MSG_MOVE_TELEPORT_ACK_Server, MonsterMove, MonsterMoveSplines, MonsterMove_MonsterMoveType,
+    MovementBlock, MovementBlock_MovementFlags, MovementBlock_UpdateFlag,
+    MovementBlock_UpdateFlag_All, MovementBlock_UpdateFlag_Living, MovementInfo,
+    MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
+    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdateItemBuilder, UpdatePlayerBuilder,
+    Vector3d, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE, SMSG_COMPRESSED_MOVES,
+    SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_ITEM_PUSH_RESULT,
+    SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD,
+    SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::vanilla::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
@@ -701,6 +704,36 @@ pub async fn gm_command(
                 }
                 .into(),
             )
+            .await;
+    } else if message == "move" {
+        let mut splines = MonsterMoveSplines::new();
+        splines.splines.push(Vector3d {
+            x: -8937.863,
+            y: -117.46813,
+            z: 82.39997,
+        });
+
+        client
+            .send_message(SMSG_COMPRESSED_MOVES {
+                moves: vec![CompressedMove {
+                    opcode: CompressedMove_CompressedMoveOpcode::SmsgMonsterMove {
+                        monster_move: MonsterMove {
+                            spline_point: Vector3d {
+                                x: -8938.857,
+                                y: -131.36594,
+                                z: 83.57745,
+                            },
+                            spline_id: 0,
+                            move_type: MonsterMove_MonsterMoveType::Normal {
+                                duration: 0,
+                                spline_flags: SplineFlag::empty(),
+                                splines,
+                            },
+                        },
+                    },
+                    guid: 100.into(),
+                }],
+            })
             .await;
     }
 }

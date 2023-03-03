@@ -1,5 +1,5 @@
 use crate::world::DESIRED_TIMESTEP;
-use wow_world_base::vanilla::{Map, PlayerGender, RaceClass, Vector3d};
+use wow_world_base::vanilla::{Level, Map, PlayerGender, RaceClass, Vector3d};
 use wow_world_base::{calculate_health, calculate_mana};
 use wow_world_base::{BaseStats, DEFAULT_RUNNING_SPEED};
 use wow_world_messages::vanilla::{Area, CharacterGear, CreatureFamily, MovementInfo, Power};
@@ -16,7 +16,7 @@ pub struct Character {
     pub hairstyle: u8,
     pub haircolor: u8,
     pub facialhair: u8,
-    pub level: u8,
+    pub level: Level,
     pub area: Area,
     pub map: Map,
     pub info: MovementInfo,
@@ -29,7 +29,7 @@ pub struct Character {
 impl Character {
     fn default_stats(&self) -> BaseStats {
         self.race_class
-            .base_stats_for(self.level)
+            .base_stats_for(self.level.as_int())
             .unwrap_or(self.race_class.base_stats()[0])
     }
 
@@ -40,7 +40,7 @@ impl Character {
         gender: PlayerGender,
     ) -> Self {
         let mut c = Self::new(guid, name, race_class, gender, 0, 0, 0, 0, 0);
-        c.level = 60;
+        c.level = Level::new_vanilla_max_level_player();
         c
     }
 
@@ -66,7 +66,7 @@ impl Character {
             hairstyle: hair_style,
             haircolor: hair_color,
             facialhair: facial_hair,
-            level: 1,
+            level: Level::new_player(),
             area: Default::default(),
             map: start.map,
             info: MovementInfo {
@@ -155,7 +155,7 @@ impl From<Character> for wow_world_messages::vanilla::Character {
             flags: Default::default(),
             first_login: false,
             pet_display_id: 0,
-            pet_level: 0,
+            pet_level: Level::zero(),
             pet_family: CreatureFamily::None,
             equipment: [CharacterGear::default(); 19],
         }

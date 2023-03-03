@@ -10,18 +10,19 @@ use tokio::sync::mpsc::Receiver;
 use wow_world_base::combat::UNARMED_SPEED_FLOAT;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::vanilla::position::{position_from_str, Position};
-use wow_world_base::vanilla::{HitInfo, Map};
+use wow_world_base::vanilla::{HitInfo, Map, NewItemChatAlert, NewItemCreationType, NewItemSource};
 use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
 use wow_world_messages::vanilla::{
     DamageInfo, InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
-    MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
-    MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
-    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdatePlayerBuilder, Vector3d,
-    SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE, SMSG_DESTROY_OBJECT,
-    SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED,
-    SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED,
-    SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
+    MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_All,
+    MovementBlock_UpdateFlag_Living, MovementInfo, MovementInfo_MovementFlags, Object, ObjectType,
+    Object_UpdateType, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex,
+    UpdateItemBuilder, UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES,
+    SMSG_ATTACKERSTATEUPDATE, SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE,
+    SMSG_INITIAL_SPELLS, SMSG_ITEM_PUSH_RESULT, SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD,
+    SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING,
+    SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::vanilla::{UpdateMask, Vector2d};
 use wow_world_messages::{DateTime, Guid};
@@ -227,7 +228,7 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
         .set_player_VISIBLE_ITEM_5_0(11726)
         .set_unit_HEALTH(character.max_health())
         .set_unit_MAXHEALTH(character.max_health())
-        .set_unit_LEVEL(character.level as i32)
+        .set_unit_LEVEL(character.level.as_int() as i32)
         .set_unit_AGILITY(character.agility())
         .set_unit_STRENGTH(character.strength())
         .set_unit_STAMINA(character.stamina())
@@ -641,6 +642,66 @@ pub async fn gm_command(
         p.z = p.z + distance;
 
         prepare_teleport(p, client).await;
+    } else if message == "item" {
+        client
+            .send_opcode(
+                &SMSG_UPDATE_OBJECT {
+                    has_transport: 0,
+                    objects: vec![
+                        Object {
+                            update_type: Object_UpdateType::CreateObject {
+                                guid3: Guid::new(1337_1337),
+                                mask2: UpdateMask::Item(
+                                    UpdateItemBuilder::new()
+                                        .set_object_GUID(1337_1337.into())
+                                        .set_object_ENTRY(12640)
+                                        .set_object_SCALE_X(1.0)
+                                        .set_item_OWNER(client.character().guid)
+                                        .set_item_CONTAINED(client.character().guid)
+                                        .set_item_STACK_COUNT(1)
+                                        .set_item_DURABILITY(100)
+                                        .set_item_MAXDURABILITY(100)
+                                        .finalize(),
+                                ),
+                                movement2: MovementBlock {
+                                    update_flag: MovementBlock_UpdateFlag::empty()
+                                        .set_ALL(MovementBlock_UpdateFlag_All { unknown1: 1 }),
+                                },
+                                object_type: ObjectType::Item,
+                            },
+                        },
+                        Object {
+                            update_type: Object_UpdateType::Values {
+                                guid1: client.character().guid,
+                                mask1: UpdateMask::Player(
+                                    UpdatePlayerBuilder::new()
+                                        .set_player_FIELD_INV_SLOT_HEAD(1337_1337.into())
+                                        .finalize(),
+                                ),
+                            },
+                        },
+                    ],
+                }
+                .into(),
+            )
+            .await;
+        client
+            .send_opcode(
+                &SMSG_ITEM_PUSH_RESULT {
+                    guid: client.character().guid,
+                    source: NewItemSource::Looted,
+                    creation_type: NewItemCreationType::Created,
+                    alert_chat: NewItemChatAlert::Show,
+                    bag_slot: 0xff,
+                    item_slot: 24,
+                    item: 12640,
+                    item_suffix_factor: 0,
+                    item_random_property_id: 0,
+                    item_count: 1,
+                }
+                .into(),
+            )
+            .await;
     }
 }
 

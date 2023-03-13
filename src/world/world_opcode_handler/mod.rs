@@ -158,7 +158,7 @@ pub async fn handle_received_client_opcodes(
                         .await;
                 }
             }
-            ClientOpcodeMessage::MSG_MOVE_WORLDPORT_ACK(_) => {
+            ClientOpcodeMessage::MSG_MOVE_WORLDPORT_ACK => {
                 if !client.in_process_of_teleport {
                     return;
                 }
@@ -195,7 +195,7 @@ pub async fn handle_received_client_opcodes(
 
                 handle_message(client, clients, c).await;
             }
-            ClientOpcodeMessage::CMSG_LOGOUT_REQUEST(_) => {
+            ClientOpcodeMessage::CMSG_LOGOUT_REQUEST => {
                 client
                     .send_message(SMSG_LOGOUT_RESPONSE {
                         result: LogoutResult::Success,
@@ -213,7 +213,7 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::CMSG_SET_SELECTION(c) => {
                 client.character_mut().target = c.target;
             }
-            ClientOpcodeMessage::CMSG_QUERY_TIME(_) => {
+            ClientOpcodeMessage::CMSG_QUERY_TIME => {
                 client
                     .send_message(SMSG_QUERY_TIME_RESPONSE {
                         time: SystemTime::now()
@@ -548,7 +548,7 @@ pub async fn handle_received_client_opcodes(
                     .await;
                 }
             }
-            ClientOpcodeMessage::CMSG_ATTACKSTOP(_) => {
+            ClientOpcodeMessage::CMSG_ATTACKSTOP => {
                 client.character_mut().attacking = false;
 
                 for c in &mut *clients {

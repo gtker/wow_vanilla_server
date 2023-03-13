@@ -20,7 +20,7 @@ pub async fn handle_character_screen_opcodes(
                     })
                     .await;
             }
-            ClientOpcodeMessage::CMSG_CHAR_ENUM(_) => {
+            ClientOpcodeMessage::CMSG_CHAR_ENUM => {
                 let characters: Vec<Character> = db
                     .get_characters_for_account(&client.account_name())
                     .into_iter()

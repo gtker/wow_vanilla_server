@@ -17,13 +17,13 @@ use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAUL
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
 use wow_world_messages::vanilla::{
     CompressedMove, CompressedMove_CompressedMoveOpcode, DamageInfo, InitialSpell, Language,
-    MSG_MOVE_TELEPORT_ACK_Server, MonsterMove, MonsterMoveSplines, MonsterMove_MonsterMoveType,
-    MovementBlock, MovementBlock_MovementFlags, MovementBlock_UpdateFlag,
-    MovementBlock_UpdateFlag_All, MovementBlock_UpdateFlag_Living, MovementInfo,
-    MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
-    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdateItemBuilder, UpdatePlayerBuilder,
-    Vector3d, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE, SMSG_COMPRESSED_MOVES,
-    SMSG_DESTROY_OBJECT, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_ITEM_PUSH_RESULT,
+    MSG_MOVE_TELEPORT_ACK_Server, MonsterMove, MonsterMove_MonsterMoveType, MovementBlock,
+    MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_All,
+    MovementBlock_UpdateFlag_Living, MovementInfo, MovementInfo_MovementFlags, Object, ObjectType,
+    Object_UpdateType, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex,
+    UpdateItemBuilder, UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES,
+    SMSG_ATTACKERSTATEUPDATE, SMSG_COMPRESSED_MOVES, SMSG_DESTROY_OBJECT,
+    SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_ITEM_PUSH_RESULT,
     SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD,
     SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
 };
@@ -706,13 +706,6 @@ pub async fn gm_command(
             )
             .await;
     } else if message == "move" {
-        let mut splines = MonsterMoveSplines::new();
-        splines.splines.push(Vector3d {
-            x: -8937.863,
-            y: -117.46813,
-            z: 82.39997,
-        });
-
         client
             .send_message(SMSG_COMPRESSED_MOVES {
                 moves: vec![CompressedMove {
@@ -727,7 +720,11 @@ pub async fn gm_command(
                             move_type: MonsterMove_MonsterMoveType::Normal {
                                 duration: 0,
                                 spline_flags: SplineFlag::empty(),
-                                splines,
+                                splines: vec![Vector3d {
+                                    x: -8937.863,
+                                    y: -117.46813,
+                                    z: 82.39997,
+                                }],
                             },
                         },
                     },

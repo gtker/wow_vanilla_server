@@ -23,7 +23,6 @@ use wow_srp::server::SrpServer;
 use wow_srp::vanilla_header::ProofSeed;
 use wow_world_messages::vanilla::tokio_expect_client_message;
 use wow_world_messages::vanilla::*;
-use wow_world_messages::Guid;
 
 pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
     let listener = TcpListener::bind("0.0.0.0:8085").await.unwrap();
@@ -108,20 +107,8 @@ async fn character_screen(
     .await
     .unwrap();
 
-    let character = character::Character::test_character(
-        Guid::zero(),
-        "",
-        Default::default(),
-        Default::default(),
-    );
-
     world
-        .send(CharacterScreenClient::new(
-            account_name,
-            character,
-            stream,
-            encryption,
-        ))
+        .send(CharacterScreenClient::new(account_name, stream, encryption))
         .await
         .unwrap();
 }

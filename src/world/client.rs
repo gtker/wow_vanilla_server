@@ -20,7 +20,7 @@ use wow_world_messages::Guid;
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 pub enum CharacterScreenProgress {
     CharacterScreen,
-    WaitingToLogIn,
+    WaitingToLogIn(u64),
 }
 
 #[derive(Debug)]
@@ -39,7 +39,6 @@ pub struct Client {
 impl Client {
     pub(crate) fn into_character_screen_client(self) -> CharacterScreenClient {
         CharacterScreenClient {
-            character: self.character,
             in_process_of_teleport: self.in_process_of_teleport,
             location_index: self.location_index,
             status: self.status,
@@ -138,7 +137,6 @@ impl Client {
 
 #[derive(Debug)]
 pub struct CharacterScreenClient {
-    character: Character,
     pub in_process_of_teleport: bool,
     pub location_index: usize,
     pub status: CharacterScreenProgress,
@@ -150,9 +148,9 @@ pub struct CharacterScreenClient {
 }
 
 impl CharacterScreenClient {
-    pub fn into_client(self) -> Client {
+    pub fn into_client(self, character: Character) -> Client {
         Client {
-            character: self.character,
+            character,
             in_process_of_teleport: self.in_process_of_teleport,
             location_index: self.location_index,
             status: self.status,
@@ -164,12 +162,7 @@ impl CharacterScreenClient {
         }
     }
 
-    pub fn new(
-        account_name: String,
-        character: Character,
-        stream: TcpStream,
-        encryption: HeaderCrypto,
-    ) -> Self {
+    pub fn new(account_name: String, stream: TcpStream, encryption: HeaderCrypto) -> Self {
         let (read, write) = stream.into_split();
         let (encrypter, decrypter) = encryption.split();
 
@@ -209,7 +202,6 @@ impl CharacterScreenClient {
         });
 
         Self {
-            character,
             in_process_of_teleport: false,
             location_index: 0,
             status: CharacterScreenProgress::CharacterScreen,
@@ -219,14 +211,6 @@ impl CharacterScreenClient {
             account_name,
             reader_handle,
         }
-    }
-
-    pub fn character(&self) -> &Character {
-        &self.character
-    }
-
-    pub fn character_mut(&mut self) -> &mut Character {
-        &mut self.character
     }
 
     pub fn account_name(&self) -> &str {

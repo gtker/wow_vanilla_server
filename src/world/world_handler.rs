@@ -66,10 +66,14 @@ impl World {
         while let Some(i) = self
             .clients_on_character_screen
             .iter()
-            .position(|a| a.status == CharacterScreenProgress::WaitingToLogIn)
+            .position(|a| matches!(a.status, CharacterScreenProgress::WaitingToLogIn(_)))
         {
             let c = self.clients_on_character_screen.remove(i);
-            let mut c = c.into_client();
+            let character = match c.status {
+                CharacterScreenProgress::WaitingToLogIn(c) => db.get_character_by_guid(c.into()),
+                _ => unreachable!(),
+            };
+            let mut c = c.into_client(character);
 
             for client in &mut self.clients {
                 announce_character_login(client, c.character()).await;

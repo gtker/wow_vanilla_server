@@ -11,10 +11,10 @@ use wow_world_base::vanilla::trigger::Trigger;
 use wow_world_base::vanilla::{CreatureFamily, HitInfo};
 use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::vanilla::{
-    item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed, MSG_MOVE_FALL_LAND_Server,
-    MSG_MOVE_HEARTBEAT_Server, MSG_MOVE_JUMP_Server, MSG_MOVE_SET_FACING_Server,
-    MSG_MOVE_SET_PITCH_Server, MSG_MOVE_SET_RUN_MODE_Server, MSG_MOVE_SET_WALK_MODE_Server,
-    MSG_MOVE_START_BACKWARD_Server, MSG_MOVE_START_FORWARD_Server,
+    item_to_name_query_response, item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed,
+    MSG_MOVE_FALL_LAND_Server, MSG_MOVE_HEARTBEAT_Server, MSG_MOVE_JUMP_Server,
+    MSG_MOVE_SET_FACING_Server, MSG_MOVE_SET_PITCH_Server, MSG_MOVE_SET_RUN_MODE_Server,
+    MSG_MOVE_SET_WALK_MODE_Server, MSG_MOVE_START_BACKWARD_Server, MSG_MOVE_START_FORWARD_Server,
     MSG_MOVE_START_PITCH_DOWN_Server, MSG_MOVE_START_PITCH_UP_Server,
     MSG_MOVE_START_STRAFE_LEFT_Server, MSG_MOVE_START_STRAFE_RIGHT_Server,
     MSG_MOVE_START_SWIM_Server, MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server,
@@ -101,6 +101,14 @@ pub async fn handle_received_client_opcodes(
                     }
                 }
             }
+            ClientOpcodeMessage::CMSG_ITEM_NAME_QUERY(c) => {
+                let item = wow_items::vanilla::lookup_item(c.item);
+                match item {
+                    None => {}
+                    Some(item) => client.send_message(item_to_name_query_response(item)).await,
+                }
+            }
+
             ClientOpcodeMessage::CMSG_NAME_QUERY(c) => {
                 let character = db.get_character_by_guid(c.guid);
 

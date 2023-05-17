@@ -1,7 +1,9 @@
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::{Arc, Mutex};
 use tokio::net::{TcpListener, TcpStream};
+use toml;
 use wow_login_messages::all::{
     CMD_AUTH_LOGON_CHALLENGE_Client, CMD_AUTH_RECONNECT_CHALLENGE_Client,
 };
@@ -17,8 +19,33 @@ use wow_srp::{PublicKey, GENERATOR, LARGE_SAFE_PRIME_LITTLE_ENDIAN};
 const EXTERNAL_WORLD_STRING: &str = "vpn.gtker.com:8085";
 const INTERNAL_WORLD_STRING: &str = "localhost:8085";
 
+#[derive(Debug, Deserialize)]
+struct AuthConfig {
+    #[serde(default = "default_bind_ip")]
+    bind_ip: String,
+    #[serde(default = "default_auth_server_port")]
+    auth_server_port: u16,
+}
+
+fn default_bind_ip() -> String {
+    return String::from("0.0.0.0");
+}
+
+fn default_auth_server_port() -> u16 {
+    return 3724;
+}
+
 pub async fn auth(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
-    let listener = TcpListener::bind("0.0.0.0:3724").await.unwrap();
+    let auth_config: AuthConfig = match std::fs::read_to_string("realmd.conf") {
+        Ok(config_content) => toml::from_str(&config_content).unwrap(),
+        Err(err) => {
+            println!("realmd.conf file unreadable: {}", err);
+            toml::from_str("").unwrap()
+        }
+    };
+
+    let bind_addr = format!("{}:{}", auth_config.bind_ip, auth_config.auth_server_port);
+    let listener = TcpListener::bind(bind_addr).await.unwrap();
 
     loop {
         let (stream, _) = listener.accept().await.unwrap();

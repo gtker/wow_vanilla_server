@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde = {version = "1.0", features = ["derive"]}
+toml = "0.4"
 tokio = {version = "1.24.2", features = ["full"]}
 wow_login_messages = { git="https://github.com/gtker/wow_messages.git", rev = "4fa88dbcd76b5385cac544a9a62e5a7123b34b57", features = ["tokio"] }
 wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "4fa88dbcd76b5385cac544a9a62e5a7123b34b57", features = ["tokio", "vanilla"] }

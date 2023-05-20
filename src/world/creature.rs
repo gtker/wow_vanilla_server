@@ -1,5 +1,5 @@
+use wow_world_base::movement::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_base::vanilla::position::{position, PositionIdentifier};
-use wow_world_base::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
     MovementBlock, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo, Object,
@@ -47,18 +47,18 @@ impl Creature {
                     guid3: self.guid,
                     mask2: UpdateMask::Unit(
                         UpdateUnitBuilder::new()
-                            .set_unit_HEALTH(100)
-                            .set_unit_MAXHEALTH(100)
-                            .set_object_GUID(self.guid)
-                            .set_unit_DISPLAYID(self.display_id.into())
-                            .set_object_SCALE_X(1.0)
-                            .set_unit_LEVEL(self.level.into())
-                            .set_unit_FACTIONTEMPLATE(16)
-                            .set_object_ENTRY(69)
+                            .set_unit_health(100)
+                            .set_unit_maxhealth(100)
+                            .set_object_guid(self.guid)
+                            .set_unit_displayid(self.display_id.into())
+                            .set_object_scale_x(1.0)
+                            .set_unit_level(self.level.into())
+                            .set_unit_factiontemplate(16)
+                            .set_object_entry(69)
                             .finalize(),
                     ),
                     movement2: MovementBlock {
-                        update_flag: MovementBlock_UpdateFlag::new_LIVING(
+                        update_flag: MovementBlock_UpdateFlag::new_living(
                             MovementBlock_UpdateFlag_Living::Living {
                                 backwards_running_speed: 0.0,
                                 backwards_swimming_speed: 0.0,

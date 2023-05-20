@@ -5,7 +5,7 @@ use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use crate::world::world_handler::announce_character_login;
 use std::time::SystemTime;
-use wow_world_base::combat::UNARMED_SPEED_FLOAT;
+use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::trigger::Trigger;
 use wow_world_base::vanilla::{CreatureFamily, HitInfo};
@@ -497,10 +497,10 @@ pub async fn handle_received_client_opcodes(
             ClientOpcodeMessage::CMSG_ATTACKSWING(c) => {
                 client.character_mut().target = c.guid;
                 client.character_mut().attacking = true;
-                if client.character().auto_attack_timer > UNARMED_SPEED_FLOAT {
+                if client.character().auto_attack_timer > UNARMED_SPEED {
                     continue;
                 }
-                client.character_mut().auto_attack_timer = UNARMED_SPEED_FLOAT;
+                client.character_mut().auto_attack_timer = UNARMED_SPEED;
 
                 for c in &mut *clients {
                     c.send_message(SMSG_ATTACKSTART {

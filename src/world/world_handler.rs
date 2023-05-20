@@ -7,13 +7,15 @@ use crate::world::world_opcode_handler;
 use std::collections::BTreeSet;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
-use wow_world_base::combat::UNARMED_SPEED_FLOAT;
+use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::geometry::trace_point_2d;
+use wow_world_base::movement::{
+    DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED,
+};
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::{
     HitInfo, Map, NewItemChatAlert, NewItemCreationType, NewItemSource, SplineFlag,
 };
-use wow_world_base::{DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
 use wow_world_messages::vanilla::{
     CompressedMove, CompressedMove_CompressedMoveOpcode, DamageInfo, InitialSpell, Language,
@@ -107,7 +109,7 @@ impl World {
             client.character_mut().update_auto_attack_timer();
 
             if client.character().attacking && client.character().auto_attack_timer <= 0.0 {
-                client.character_mut().auto_attack_timer = UNARMED_SPEED_FLOAT;
+                client.character_mut().auto_attack_timer = UNARMED_SPEED;
                 let msg = SMSG_ATTACKERSTATEUPDATE {
                     hit_info: HitInfo::CriticalHit,
                     attacker: client.character().guid,
@@ -169,7 +171,7 @@ pub fn get_self_update_object_create_object2(character: &Character) -> SMSG_UPDA
 
     match &mut m.objects[0].update_type {
         Object_UpdateType::CreateObject2 { movement2, .. } => {
-            movement2.update_flag = movement2.update_flag.clone().set_SELF();
+            movement2.update_flag = movement2.update_flag.clone().set_self();
         }
         _ => unreachable!(),
     }
@@ -185,7 +187,7 @@ pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OB
                 guid3: character.guid,
                 mask2: get_update_object_player(character),
                 movement2: MovementBlock {
-                    update_flag: MovementBlock_UpdateFlag::new_LIVING(
+                    update_flag: MovementBlock_UpdateFlag::new_living(
                         MovementBlock_UpdateFlag_Living::Living {
                             backwards_running_speed: DEFAULT_RUNNING_BACKWARDS_SPEED,
                             backwards_swimming_speed: 0.0,
@@ -209,45 +211,45 @@ pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OB
 
 fn get_update_object_player(character: &Character) -> UpdateMask {
     let mut mask = UpdatePlayerBuilder::new()
-        .set_object_GUID(character.guid)
-        .set_object_SCALE_X(
+        .set_object_guid(character.guid)
+        .set_object_scale_x(
             character
                 .race_class
                 .to_race_class()
                 .0
                 .race_scale(character.gender),
         )
-        .set_unit_BYTES_0(
+        .set_unit_bytes_0(
             character.race_class.race().into(),
             character.race_class.class(),
             character.gender.into(),
             character.race_class.class().power_type(),
         )
-        .set_player_BYTES_2(character.facialhair, 0, 0, 2)
-        .set_player_FEATURES(
+        .set_player_bytes_2(character.facialhair, 0, 0, 2)
+        .set_player_features(
             character.skin,
             character.face,
             character.hairstyle,
             character.haircolor,
         )
-        .set_unit_BASE_HEALTH(character.base_health())
-        .set_player_VISIBLE_ITEM_1_0(12640) // Lionheart Helm
-        .set_player_VISIBLE_ITEM_5_0(11726)
-        .set_unit_HEALTH(character.max_health())
-        .set_unit_MAXHEALTH(character.max_health())
-        .set_unit_LEVEL(character.level.as_int() as i32)
-        .set_unit_AGILITY(character.agility())
-        .set_unit_STRENGTH(character.strength())
-        .set_unit_STAMINA(character.stamina())
-        .set_unit_INTELLECT(character.intellect())
-        .set_unit_SPIRIT(character.spirit())
-        .set_unit_FACTIONTEMPLATE(character.race_class.race().faction_id().as_int() as i32)
-        .set_unit_DISPLAYID(character.race_class.race().display_id(character.gender))
-        .set_unit_NATIVEDISPLAYID(character.race_class.race().display_id(character.gender))
-        .set_unit_TARGET(character.target);
+        .set_unit_base_health(character.base_health())
+        .set_player_visible_item_1_0(12640) // Lionheart Helm
+        .set_player_visible_item_5_0(11726)
+        .set_unit_health(character.max_health())
+        .set_unit_maxhealth(character.max_health())
+        .set_unit_level(character.level.as_int() as i32)
+        .set_unit_agility(character.agility())
+        .set_unit_strength(character.strength())
+        .set_unit_stamina(character.stamina())
+        .set_unit_intellect(character.intellect())
+        .set_unit_spirit(character.spirit())
+        .set_unit_factiontemplate(character.race_class.race().faction_id().as_int() as i32)
+        .set_unit_displayid(character.race_class.race().display_id(character.gender))
+        .set_unit_nativedisplayid(character.race_class.race().display_id(character.gender))
+        .set_unit_target(character.target);
 
     for (i, skill) in character.race_class.starter_skills().iter().enumerate() {
-        mask = mask.set_player_SKILL_INFO(
+        mask = mask.set_player_skill_info(
             SkillInfo::new(*skill, 0, 295, 300, 0, 2),
             SkillInfoIndex::try_from(i as u32).unwrap(),
         );
@@ -660,19 +662,19 @@ pub async fn gm_command(
                                 guid3: Guid::new(1337_1337),
                                 mask2: UpdateMask::Item(
                                     UpdateItemBuilder::new()
-                                        .set_object_GUID(1337_1337.into())
-                                        .set_object_ENTRY(12640)
-                                        .set_object_SCALE_X(1.0)
-                                        .set_item_OWNER(client.character().guid)
-                                        .set_item_CONTAINED(client.character().guid)
-                                        .set_item_STACK_COUNT(1)
-                                        .set_item_DURABILITY(100)
-                                        .set_item_MAXDURABILITY(100)
+                                        .set_object_guid(1337_1337.into())
+                                        .set_object_entry(12640)
+                                        .set_object_scale_x(1.0)
+                                        .set_item_owner(client.character().guid)
+                                        .set_item_contained(client.character().guid)
+                                        .set_item_stack_count(1)
+                                        .set_item_durability(100)
+                                        .set_item_maxdurability(100)
                                         .finalize(),
                                 ),
                                 movement2: MovementBlock {
                                     update_flag: MovementBlock_UpdateFlag::empty()
-                                        .set_ALL(MovementBlock_UpdateFlag_All { unknown1: 1 }),
+                                        .set_all(MovementBlock_UpdateFlag_All { unknown1: 1 }),
                                 },
                                 object_type: ObjectType::Item,
                             },
@@ -682,7 +684,7 @@ pub async fn gm_command(
                                 guid1: client.character().guid,
                                 mask1: UpdateMask::Player(
                                     UpdatePlayerBuilder::new()
-                                        .set_player_FIELD_INV_SLOT_HEAD(1337_1337.into())
+                                        .set_player_field_inv_slot_head(1337_1337.into())
                                         .finalize(),
                                 ),
                             },

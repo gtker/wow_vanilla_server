@@ -5,6 +5,7 @@ pub mod chat;
 mod client;
 mod creature;
 mod database;
+pub(crate) mod item;
 mod world_handler;
 pub mod world_opcode_handler;
 

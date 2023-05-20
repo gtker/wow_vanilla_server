@@ -30,7 +30,7 @@ pub async fn handle_character_screen_opcodes(
                 client.send_message(SMSG_CHAR_ENUM { characters }).await;
             }
             ClientOpcodeMessage::CMSG_CHAR_CREATE(c) => {
-                let character = char_create::create_character(c, &db);
+                let character = char_create::create_character(c, db);
 
                 if let Some(character) = character {
                     db.create_character_in_account(client.account_name(), character);

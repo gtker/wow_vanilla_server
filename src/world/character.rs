@@ -1,4 +1,7 @@
+use crate::world::database::WorldDatabase;
+use crate::world::item::Item;
 use crate::world::DESIRED_TIMESTEP;
+use wow_items::vanilla::lookup_item;
 use wow_world_base::vanilla::{Level, Map, PlayerGender, RaceClass, Vector3d};
 use wow_world_base::{calculate_health, calculate_mana};
 use wow_world_base::{BaseStats, DEFAULT_RUNNING_SPEED};
@@ -24,6 +27,7 @@ pub struct Character {
     pub target: Guid,
     pub attacking: bool,
     pub auto_attack_timer: f32,
+    pub items: Vec<Item>,
 }
 
 impl Character {
@@ -34,18 +38,18 @@ impl Character {
     }
 
     pub fn test_character(
-        guid: Guid,
+        db: &mut WorldDatabase,
         name: impl Into<String>,
         race_class: RaceClass,
         gender: PlayerGender,
     ) -> Self {
-        let mut c = Self::new(guid, name, race_class, gender, 0, 0, 0, 0, 0);
+        let mut c = Self::new(db, name, race_class, gender, 0, 0, 0, 0, 0);
         c.level = Level::new_vanilla_max_level_player();
         c
     }
 
     pub fn new(
-        guid: Guid,
+        db: &mut WorldDatabase,
         name: impl Into<String>,
         race_class: RaceClass,
         gender: PlayerGender,
@@ -56,8 +60,17 @@ impl Character {
         facial_hair: u8,
     ) -> Self {
         let start = race_class.starting_position();
+
+        let items = {
+            race_class
+                .starter_items()
+                .iter()
+                .map(|item| Item::new(lookup_item(item.item).unwrap(), db))
+        }
+        .collect();
+
         Self {
-            guid,
+            guid: db.new_guid().into(),
             name: name.into(),
             race_class,
             gender,
@@ -84,6 +97,7 @@ impl Character {
             target: Default::default(),
             attacking: false,
             auto_attack_timer: 0.0,
+            items,
         }
     }
 

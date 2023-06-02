@@ -4,8 +4,7 @@ use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use crate::world::world_handler::{
-    announce_character_login, get_self_update_object_create_object2,
-    update_player_builder_visible_id_to_function,
+    announce_character_login, update_player_builder_visible_id_to_function,
 };
 use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED;

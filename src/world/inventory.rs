@@ -1,7 +1,7 @@
 use crate::world::database::WorldDatabase;
 use crate::world::item::Item;
 use wow_items::vanilla::lookup_item;
-use wow_world_base::vanilla::{InventoryType, ItemSlot, StarterItem};
+use wow_world_base::vanilla::{ItemSlot, StarterItem};
 use wow_world_messages::vanilla::CharacterGear;
 
 #[derive(Debug, Clone)]

@@ -372,7 +372,7 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
         .inventory
         .all_slots()
         .iter()
-        .filter_map(|(item, slot)| {
+        .filter_map(|(item, _)| {
             item.map(|item| Object {
                 update_type: Object_UpdateType::CreateObject {
                     guid3: item.guid,

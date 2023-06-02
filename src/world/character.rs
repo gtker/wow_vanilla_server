@@ -1,13 +1,11 @@
 use crate::world::database::WorldDatabase;
 use crate::world::inventory::Inventory;
-use crate::world::item::Item;
 use crate::world::DESIRED_TIMESTEP;
-use wow_items::vanilla::lookup_item;
 use wow_world_base::movement::DEFAULT_RUNNING_SPEED;
 use wow_world_base::stats::BaseStats;
 use wow_world_base::stats::{calculate_health, calculate_mana};
 use wow_world_base::vanilla::{Level, Map, PlayerGender, RaceClass, Vector3d};
-use wow_world_messages::vanilla::{Area, CharacterGear, CreatureFamily, MovementInfo, Power};
+use wow_world_messages::vanilla::{Area, CreatureFamily, MovementInfo, Power};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]

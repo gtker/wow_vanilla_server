@@ -13,7 +13,7 @@ use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
 use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::vanilla::{
     Language, MovementInfo, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d,
-    SMSG_MESSAGECHAT, SMSG_UPDATE_OBJECT,
+    SMSG_MESSAGECHAT,
 };
 use wow_world_messages::Guid;
 

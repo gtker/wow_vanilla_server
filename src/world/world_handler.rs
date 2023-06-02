@@ -233,8 +233,6 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
             character.haircolor,
         )
         .set_unit_base_health(character.base_health())
-        .set_player_visible_item_1_0(12640) // Lionheart Helm
-        .set_player_visible_item_5_0(11726)
         .set_unit_health(character.max_health())
         .set_unit_maxhealth(character.max_health())
         .set_unit_level(character.level.as_int() as i32)
@@ -248,6 +246,15 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
         .set_unit_nativedisplayid(character.race_class.race().display_id(character.gender))
         .set_unit_target(character.target);
 
+    for (i, (item, slot)) in character.inventory.all_slots().iter().enumerate() {
+        if let Some(item) = item {
+            if let Some(visible) = update_player_builder_visible_id_to_function(i) {
+                mask = visible(mask, item.item.entry() as i32);
+            }
+            mask = mask.set_player_field_inv_slot(*slot, item.guid);
+        }
+    }
+
     for (i, skill) in character.race_class.starter_skills().iter().enumerate() {
         mask = mask.set_player_skill_info(
             SkillInfo::new(*skill, 0, 295, 300, 0, 2),
@@ -256,6 +263,33 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
     }
 
     UpdateMask::Player(mask.finalize())
+}
+
+pub(crate) fn update_player_builder_visible_id_to_function(
+    i: usize,
+) -> Option<impl Fn(UpdatePlayerBuilder, i32) -> UpdatePlayerBuilder> {
+    Some(match i {
+        0 => UpdatePlayerBuilder::set_player_visible_item_1_0,
+        1 => UpdatePlayerBuilder::set_player_visible_item_2_0,
+        2 => UpdatePlayerBuilder::set_player_visible_item_3_0,
+        3 => UpdatePlayerBuilder::set_player_visible_item_4_0,
+        4 => UpdatePlayerBuilder::set_player_visible_item_5_0,
+        5 => UpdatePlayerBuilder::set_player_visible_item_6_0,
+        6 => UpdatePlayerBuilder::set_player_visible_item_7_0,
+        7 => UpdatePlayerBuilder::set_player_visible_item_8_0,
+        8 => UpdatePlayerBuilder::set_player_visible_item_9_0,
+        9 => UpdatePlayerBuilder::set_player_visible_item_10_0,
+        10 => UpdatePlayerBuilder::set_player_visible_item_11_0,
+        11 => UpdatePlayerBuilder::set_player_visible_item_12_0,
+        12 => UpdatePlayerBuilder::set_player_visible_item_13_0,
+        13 => UpdatePlayerBuilder::set_player_visible_item_14_0,
+        14 => UpdatePlayerBuilder::set_player_visible_item_15_0,
+        15 => UpdatePlayerBuilder::set_player_visible_item_16_0,
+        16 => UpdatePlayerBuilder::set_player_visible_item_17_0,
+        17 => UpdatePlayerBuilder::set_player_visible_item_18_0,
+        18 => UpdatePlayerBuilder::set_player_visible_item_19_0,
+        _ => return None,
+    })
 }
 
 pub async fn announce_character_login(client: &mut Client, character: &Character) {
@@ -330,6 +364,43 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
                 })
                 .collect(),
             cooldowns: vec![],
+        }
+        .into(),
+    );
+
+    let objects = character
+        .inventory
+        .all_slots()
+        .iter()
+        .filter_map(|(item, slot)| {
+            item.map(|item| Object {
+                update_type: Object_UpdateType::CreateObject {
+                    guid3: item.guid,
+                    mask2: UpdateMask::Item(
+                        UpdateItemBuilder::new()
+                            .set_object_guid(item.guid)
+                            .set_object_entry(item.item.entry() as i32)
+                            .set_object_scale_x(1.0)
+                            .set_item_owner(character.guid)
+                            .set_item_contained(character.guid)
+                            .set_item_stack_count(item.amount as i32)
+                            .set_item_durability(item.item.max_durability())
+                            .set_item_maxdurability(item.item.max_durability())
+                            .finalize(),
+                    ),
+                    movement2: MovementBlock {
+                        update_flag: MovementBlock_UpdateFlag::empty(),
+                    },
+                    object_type: ObjectType::Item,
+                },
+            })
+        })
+        .collect();
+
+    v.push(
+        SMSG_UPDATE_OBJECT {
+            has_transport: 0,
+            objects,
         }
         .into(),
     );

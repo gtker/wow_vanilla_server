@@ -3,7 +3,10 @@ use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
-use crate::world::world_handler::announce_character_login;
+use crate::world::world_handler::{
+    announce_character_login, get_self_update_object_create_object2,
+    update_player_builder_visible_id_to_function,
+};
 use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::vanilla::position::{position_from_str, Position};
@@ -575,6 +578,77 @@ pub async fn handle_received_client_opcodes(
                         unknown1: 0,
                     })
                     .await;
+            }
+            ClientOpcodeMessage::CMSG_SWAP_INV_ITEM(c) => {
+                if let Some(source) = client.character_mut().inventory.take(c.source_slot) {
+                    if let Some(destination) =
+                        client.character_mut().inventory.take(c.destination_slot)
+                    {
+                        client
+                            .character_mut()
+                            .inventory
+                            .set(c.destination_slot, source);
+                        client
+                            .character_mut()
+                            .inventory
+                            .set(c.source_slot, destination);
+                    } else {
+                        client
+                            .character_mut()
+                            .inventory
+                            .set(c.destination_slot, source);
+                        client.character_mut().inventory.clear(c.source_slot);
+                    }
+
+                    let mut player = UpdatePlayerBuilder::new()
+                        .set_player_field_inv_slot(
+                            c.source_slot,
+                            client
+                                .character()
+                                .inventory
+                                .get(c.source_slot)
+                                .map(|a| a.guid)
+                                .unwrap_or(Guid::zero()),
+                        )
+                        .set_player_field_inv_slot(
+                            c.destination_slot,
+                            client
+                                .character()
+                                .inventory
+                                .get(c.destination_slot)
+                                .map(|a| a.guid)
+                                .unwrap_or(Guid::zero()),
+                        );
+
+                    for (i, (item, _)) in
+                        client.character().inventory.equipment().iter().enumerate()
+                    {
+                        let item = if let Some(item) = item {
+                            item.item.entry() as i32
+                        } else {
+                            0
+                        };
+                        if let Some(visible) = update_player_builder_visible_id_to_function(i) {
+                            player = visible(player, item);
+                        }
+                    }
+
+                    let update = SMSG_UPDATE_OBJECT {
+                        has_transport: 0,
+                        objects: vec![Object {
+                            update_type: Object_UpdateType::Values {
+                                guid1: client.character().guid,
+                                mask1: UpdateMask::Player(player.finalize()),
+                            },
+                        }],
+                    };
+
+                    client.send_message(update.clone()).await;
+
+                    for c in &mut *clients {
+                        c.send_message(update.clone()).await;
+                    }
+                }
             }
             _ => {
                 dbg!(opcode);

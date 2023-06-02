@@ -3,9 +3,9 @@ use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]
 pub struct Item {
-    item: &'static wow_world_base::vanilla::Item,
-    guid: Guid,
-    amount: u8,
+    pub item: &'static wow_world_base::vanilla::Item,
+    pub guid: Guid,
+    pub amount: u8,
 }
 
 impl Item {

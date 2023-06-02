@@ -576,27 +576,6 @@ pub async fn handle_received_client_opcodes(
                     })
                     .await;
             }
-            ClientOpcodeMessage::CMSG_SWAP_INV_ITEM(c) => {
-                client
-                    .send_message(SMSG_UPDATE_OBJECT {
-                        has_transport: 0,
-                        objects: vec![Object {
-                            update_type: Object_UpdateType::Values {
-                                guid1: client.character().guid,
-                                mask1: UpdateMask::Player(
-                                    UpdatePlayerBuilder::new()
-                                        .set_player_field_inv_slot(c.source_slot, Guid::zero())
-                                        .set_player_field_inv_slot(
-                                            c.destination_slot,
-                                            1337_1337.into(),
-                                        )
-                                        .finalize(),
-                                ),
-                            },
-                        }],
-                    })
-                    .await;
-            }
             _ => {
                 dbg!(opcode);
             }

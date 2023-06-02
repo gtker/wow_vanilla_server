@@ -1,4 +1,5 @@
 use crate::world::database::WorldDatabase;
+use crate::world::inventory::Inventory;
 use crate::world::item::Item;
 use crate::world::DESIRED_TIMESTEP;
 use wow_items::vanilla::lookup_item;
@@ -28,7 +29,7 @@ pub struct Character {
     pub target: Guid,
     pub attacking: bool,
     pub auto_attack_timer: f32,
-    pub items: Vec<Item>,
+    pub inventory: Inventory,
 }
 
 impl Character {
@@ -62,13 +63,7 @@ impl Character {
     ) -> Self {
         let start = race_class.starting_position();
 
-        let items = {
-            race_class
-                .starter_items()
-                .iter()
-                .map(|item| Item::new(lookup_item(item.item).unwrap(), db))
-        }
-        .collect();
+        let inventory = Inventory::new(race_class.starter_items(), db);
 
         Self {
             guid: db.new_guid().into(),
@@ -98,7 +93,7 @@ impl Character {
             target: Default::default(),
             attacking: false,
             auto_attack_timer: 0.0,
-            items,
+            inventory,
         }
     }
 
@@ -172,7 +167,7 @@ impl From<Character> for wow_world_messages::vanilla::Character {
             pet_display_id: 0,
             pet_level: Level::zero(),
             pet_family: CreatureFamily::None,
-            equipment: [CharacterGear::default(); 19],
+            equipment: e.inventory.to_character_gear(),
         }
     }
 }

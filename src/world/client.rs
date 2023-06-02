@@ -20,7 +20,7 @@ use wow_world_messages::Guid;
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 pub enum CharacterScreenProgress {
     CharacterScreen,
-    WaitingToLogIn(u64),
+    WaitingToLogIn(Guid),
 }
 
 #[derive(Debug)]

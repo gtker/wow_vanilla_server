@@ -72,7 +72,7 @@ impl World {
         {
             let c = self.clients_on_character_screen.remove(i);
             let character = match c.status {
-                CharacterScreenProgress::WaitingToLogIn(c) => db.get_character_by_guid(c.into()),
+                CharacterScreenProgress::WaitingToLogIn(c) => db.get_character_by_guid(c),
                 _ => unreachable!(),
             };
             let mut c = c.into_client(character);

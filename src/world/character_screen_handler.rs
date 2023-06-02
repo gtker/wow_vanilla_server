@@ -52,7 +52,7 @@ pub async fn handle_character_screen_opcodes(
                 db.delete_character_by_guid(client.account_name(), c.guid);
             }
             ClientOpcodeMessage::CMSG_PLAYER_LOGIN(c) => {
-                client.status = CharacterScreenProgress::WaitingToLogIn(c.guid.guid());
+                client.status = CharacterScreenProgress::WaitingToLogIn(c.guid);
 
                 let character = db.get_character_by_guid(c.guid);
 

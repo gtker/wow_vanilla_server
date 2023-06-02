@@ -8,7 +8,7 @@ use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::trigger::Trigger;
-use wow_world_base::vanilla::{CreatureFamily, HitInfo};
+use wow_world_base::vanilla::{CreatureFamily, Guid, HitInfo};
 use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::vanilla::{
     item_to_name_query_response, item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed,
@@ -19,10 +19,11 @@ use wow_world_messages::vanilla::{
     MSG_MOVE_START_STRAFE_LEFT_Server, MSG_MOVE_START_STRAFE_RIGHT_Server,
     MSG_MOVE_START_SWIM_Server, MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server,
     MSG_MOVE_STOP_PITCH_Server, MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server,
-    MSG_MOVE_STOP_Server, MSG_MOVE_STOP_TURN_Server, SMSG_CREATURE_QUERY_RESPONSE_found,
-    SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE,
+    MSG_MOVE_STOP_Server, MSG_MOVE_STOP_TURN_Server, Object, Object_UpdateType,
+    SMSG_CREATURE_QUERY_RESPONSE_found, UpdateMask, UpdatePlayerBuilder, SMSG_ATTACKERSTATEUPDATE,
+    SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE,
     SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
-    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
+    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE, SMSG_UPDATE_OBJECT,
 };
 
 pub async fn handle_received_client_opcodes(
@@ -572,6 +573,27 @@ pub async fn handle_received_client_opcodes(
                         player: client.character().guid,
                         enemy: client.character().target,
                         unknown1: 0,
+                    })
+                    .await;
+            }
+            ClientOpcodeMessage::CMSG_SWAP_INV_ITEM(c) => {
+                client
+                    .send_message(SMSG_UPDATE_OBJECT {
+                        has_transport: 0,
+                        objects: vec![Object {
+                            update_type: Object_UpdateType::Values {
+                                guid1: client.character().guid,
+                                mask1: UpdateMask::Player(
+                                    UpdatePlayerBuilder::new()
+                                        .set_player_field_inv_slot(c.source_slot, Guid::zero())
+                                        .set_player_field_inv_slot(
+                                            c.destination_slot,
+                                            1337_1337.into(),
+                                        )
+                                        .finalize(),
+                                ),
+                            },
+                        }],
                     })
                     .await;
             }

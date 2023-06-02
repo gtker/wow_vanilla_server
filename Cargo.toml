@@ -7,10 +7,10 @@ edition = "2021"
 
 [dependencies]
 tokio = {version = "1.24.2", features = ["full"]}
-wow_login_messages = { git="https://github.com/gtker/wow_messages.git", rev = "4a7682aca29b47b7f65b72390fd265c48c6874d8", features = ["tokio"] }
-wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "4a7682aca29b47b7f65b72390fd265c48c6874d8", features = ["tokio", "vanilla"] }
-wow_world_base = { git="https://github.com/gtker/wow_messages.git", rev = "4a7682aca29b47b7f65b72390fd265c48c6874d8", features = ["extended", "vanilla"] }
-wow_items = { git="https://github.com/gtker/wow_messages.git", rev = "4a7682aca29b47b7f65b72390fd265c48c6874d8", features = ["vanilla", "unobtainable"] }
+wow_login_messages = { git="https://github.com/gtker/wow_messages.git", rev = "46a16e7b674245799a18b9bfbf672ff78f65101c", features = ["tokio"] }
+wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "46a16e7b674245799a18b9bfbf672ff78f65101c", features = ["tokio", "vanilla"] }
+wow_world_base = { git="https://github.com/gtker/wow_messages.git", rev = "46a16e7b674245799a18b9bfbf672ff78f65101c", features = ["extended", "vanilla"] }
+wow_items = { git="https://github.com/gtker/wow_messages.git", rev = "46a16e7b674245799a18b9bfbf672ff78f65101c", features = ["vanilla", "unobtainable"] }
 
 #wow_login_messages = { path = "../wow_messages/wow_login_messages", features = ["tokio"] }
 #wow_world_messages = { path = "../wow_messages/wow_world_messages", features = ["tokio", "vanilla"] }

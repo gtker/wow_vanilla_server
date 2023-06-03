@@ -602,7 +602,7 @@ pub async fn handle_received_client_opcodes(
                     }
 
                     let mut player = UpdatePlayerBuilder::new()
-                        .set_player_field_inv_slot(
+                        .set_player_field_inv(
                             c.source_slot,
                             client
                                 .character()
@@ -611,7 +611,7 @@ pub async fn handle_received_client_opcodes(
                                 .map(|a| a.guid)
                                 .unwrap_or(Guid::zero()),
                         )
-                        .set_player_field_inv_slot(
+                        .set_player_field_inv(
                             c.destination_slot,
                             client
                                 .character()

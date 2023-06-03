@@ -14,7 +14,7 @@ use wow_world_base::movement::{
 };
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::{
-    HitInfo, Map, NewItemChatAlert, NewItemCreationType, NewItemSource, SplineFlag,
+    HitInfo, ItemSlot, Map, NewItemChatAlert, NewItemCreationType, NewItemSource, SplineFlag,
 };
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
 use wow_world_messages::vanilla::{
@@ -251,7 +251,7 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
             if let Some(visible) = update_player_builder_visible_id_to_function(i) {
                 mask = visible(mask, item.item.entry() as i32);
             }
-            mask = mask.set_player_field_inv_slot(*slot, item.guid);
+            mask = mask.set_player_field_inv(*slot, item.guid);
         }
     }
 
@@ -755,7 +755,7 @@ pub async fn gm_command(
                                 guid1: client.character().guid,
                                 mask1: UpdateMask::Player(
                                     UpdatePlayerBuilder::new()
-                                        .set_player_field_inv_slot_head(1337_1337.into())
+                                        .set_player_field_inv(ItemSlot::Head, 1337_1337.into())
                                         .finalize(),
                                 ),
                             },

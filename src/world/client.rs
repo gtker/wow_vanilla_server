@@ -62,10 +62,6 @@ impl Client {
         self.character.info = info;
     }
 
-    pub fn account_name(&self) -> &str {
-        &self.account_name
-    }
-
     pub fn received_messages(&mut self) -> &mut Receiver<ClientOpcodeMessage> {
         &mut self.received_messages
     }

@@ -127,27 +127,29 @@ pub async fn handle_received_client_opcodes(
                     .await;
             }
             ClientOpcodeMessage::CMSG_CREATURE_QUERY(c) => {
-                client
-                    .send_message(SMSG_CREATURE_QUERY_RESPONSE {
-                        creature_entry: c.creature,
-                        found: Some(SMSG_CREATURE_QUERY_RESPONSE_found {
-                            name1: "Ghoul".to_string(),
-                            name2: "".to_string(),
-                            name3: "".to_string(),
-                            name4: "".to_string(),
-                            sub_name: "".to_string(),
-                            type_flags: 0,
-                            creature_type: 0,
-                            creature_family: CreatureFamily::None,
-                            creature_rank: 0,
-                            unknown0: 0,
-                            spell_data_id: 0,
-                            display_id: 0,
-                            civilian: 0,
-                            racial_leader: 0,
-                        }),
-                    })
-                    .await;
+                if let Some(creature) = creatures.iter().find(|a| a.entry == c.creature) {
+                    client
+                        .send_message(SMSG_CREATURE_QUERY_RESPONSE {
+                            creature_entry: c.creature,
+                            found: Some(SMSG_CREATURE_QUERY_RESPONSE_found {
+                                name1: creature.name.clone(),
+                                name2: "".to_string(),
+                                name3: "".to_string(),
+                                name4: "".to_string(),
+                                sub_name: "".to_string(),
+                                type_flags: 0,
+                                creature_type: 0,
+                                creature_family: CreatureFamily::None,
+                                creature_rank: 0,
+                                unknown0: 0,
+                                spell_data_id: 0,
+                                display_id: 0,
+                                civilian: 0,
+                                racial_leader: 0,
+                            }),
+                        })
+                        .await;
+                }
             }
             ClientOpcodeMessage::CMSG_WORLD_TELEPORT(c) => {
                 let p = Position::new(

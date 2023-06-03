@@ -9,11 +9,13 @@ use wow_world_messages::Guid;
 
 #[derive(Debug)]
 pub struct Creature {
-    name: String,
-    guid: Guid,
-    info: MovementInfo,
-    level: u8,
-    display_id: u16,
+    pub name: String,
+    pub guid: Guid,
+    pub info: MovementInfo,
+    pub level: u8,
+    pub display_id: u16,
+    pub entry: u32,
+    pub faction_template: u32,
 }
 
 impl Creature {
@@ -36,6 +38,8 @@ impl Creature {
             },
             level: 1,
             display_id: 646,
+            entry: 69,
+            faction_template: 16,
         }
     }
 
@@ -53,8 +57,8 @@ impl Creature {
                             .set_unit_displayid(self.display_id.into())
                             .set_object_scale_x(1.0)
                             .set_unit_level(self.level.into())
-                            .set_unit_factiontemplate(16)
-                            .set_object_entry(69)
+                            .set_unit_factiontemplate(self.faction_template as i32)
+                            .set_object_entry(self.entry as i32)
                             .finalize(),
                     ),
                     movement2: MovementBlock {

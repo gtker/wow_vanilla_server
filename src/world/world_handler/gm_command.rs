@@ -1,18 +1,19 @@
 use crate::world::client::Client;
 use crate::world::database::WorldDatabase;
+use crate::world::item::Item;
 use crate::world::world_handler;
+use wow_items::vanilla::lookup_item;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::{
-    Guid, ItemSlot, Map, NewItemChatAlert, NewItemCreationType, NewItemSource, ObjectType,
-    SplineFlag, Vector2d, Vector3d,
+    Map, NewItemChatAlert, NewItemCreationType, NewItemSource, ObjectType, SplineFlag, Vector2d,
+    Vector3d,
 };
 use wow_world_messages::vanilla::{
     CompressedMove, CompressedMove_CompressedMoveOpcode, MonsterMove, MonsterMove_MonsterMoveType,
-    MovementBlock, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_All, Object,
-    Object_UpdateType, UpdateItemBuilder, UpdateMask, UpdatePlayerBuilder, SMSG_COMPRESSED_MOVES,
-    SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_ITEM_PUSH_RESULT, SMSG_SPLINE_SET_RUN_SPEED,
-    SMSG_UPDATE_OBJECT,
+    MovementBlock, MovementBlock_UpdateFlag, Object, Object_UpdateType, UpdateItemBuilder,
+    UpdateMask, UpdatePlayerBuilder, SMSG_COMPRESSED_MOVES, SMSG_FORCE_RUN_SPEED_CHANGE,
+    SMSG_ITEM_PUSH_RESULT, SMSG_SPLINE_SET_RUN_SPEED, SMSG_UPDATE_OBJECT,
 };
 
 pub async fn gm_command(
@@ -20,7 +21,7 @@ pub async fn gm_command(
     clients: &mut [Client],
     message: &str,
     locations: &[(Position, String)],
-    mut db: WorldDatabase,
+    mut db: &mut WorldDatabase,
 ) {
     if message == "north" || message == "south" || message == "east" || message == "west" {
         let mut p = client.character().info.position;
@@ -329,12 +330,31 @@ pub async fn gm_command(
 
         world_handler::prepare_teleport(p, client).await;
     } else if let Some(entry) = message.strip_prefix("additem") {
-        let entry = match entry.parse::<i32>() {
+        let entry = match entry.trim().parse::<i32>() {
             Ok(e) => e,
             Err(_) => 12640, // Lionheart Helm
         };
 
-        let guid = Guid::new(db.new_guid());
+        let Some(item_entry) = lookup_item(entry as u32) else {
+            client.send_system_message(format!("Item entry {entry} not found.")).await;
+            return;
+        };
+
+        const AMOUNT: u8 = 1;
+
+        let item = Item::new(item_entry, client.character().guid, AMOUNT, &mut db);
+        let guid = item.guid;
+
+        let durability = item.item.max_durability();
+
+        let item_slot = client
+            .character_mut()
+            .inventory
+            .insert_into_first_slot(item);
+        let Some(item_slot) = item_slot else {
+            client.send_system_message("Unable to add item. No free slots available.").await;
+            return;
+        };
 
         client
             .send_opcode(
@@ -351,14 +371,14 @@ pub async fn gm_command(
                                         .set_object_scale_x(1.0)
                                         .set_item_owner(client.character().guid)
                                         .set_item_contained(client.character().guid)
-                                        .set_item_stack_count(1)
-                                        .set_item_durability(100)
-                                        .set_item_maxdurability(100)
+                                        .set_item_stack_count(AMOUNT as i32)
+                                        .set_item_durability(durability)
+                                        .set_item_maxdurability(durability)
+                                        .set_item_creator(client.character().guid)
                                         .finalize(),
                                 ),
                                 movement2: MovementBlock {
-                                    update_flag: MovementBlock_UpdateFlag::empty()
-                                        .set_all(MovementBlock_UpdateFlag_All { unknown1: 1 }),
+                                    update_flag: MovementBlock_UpdateFlag::empty(),
                                 },
                                 object_type: ObjectType::Item,
                             },
@@ -368,7 +388,7 @@ pub async fn gm_command(
                                 guid1: client.character().guid,
                                 mask1: UpdateMask::Player(
                                     UpdatePlayerBuilder::new()
-                                        .set_player_field_inv(ItemSlot::Head, guid)
+                                        .set_player_field_inv(item_slot, guid)
                                         .finalize(),
                                 ),
                             },
@@ -378,6 +398,7 @@ pub async fn gm_command(
                 .into(),
             )
             .await;
+
         client
             .send_opcode(
                 &SMSG_ITEM_PUSH_RESULT {
@@ -386,11 +407,11 @@ pub async fn gm_command(
                     creation_type: NewItemCreationType::Created,
                     alert_chat: NewItemChatAlert::Show,
                     bag_slot: 0xff,
-                    item_slot: 24,
+                    item_slot: item_slot.as_int() as u32,
                     item: entry as u32,
                     item_suffix_factor: 0,
                     item_random_property_id: 0,
-                    item_count: 1,
+                    item_count: AMOUNT as u32,
                 }
                 .into(),
             )

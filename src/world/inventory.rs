@@ -138,6 +138,45 @@ impl Inventory {
         s
     }
 
+    pub fn swap(&mut self, source: ItemSlot, destination: ItemSlot) {
+        let source_temp = self.take(source);
+        let dest_temp = self.take(destination);
+
+        *self.get_mut(source) = dest_temp;
+        *self.get_mut(destination) = source_temp;
+    }
+
+    pub fn insert_into_first_slot(&mut self, item: Item) -> Option<ItemSlot> {
+        let slots = [
+            (&mut self.inventory0, ItemSlot::Inventory0),
+            (&mut self.inventory1, ItemSlot::Inventory1),
+            (&mut self.inventory2, ItemSlot::Inventory2),
+            (&mut self.inventory3, ItemSlot::Inventory3),
+            (&mut self.inventory4, ItemSlot::Inventory4),
+            (&mut self.inventory5, ItemSlot::Inventory5),
+            (&mut self.inventory6, ItemSlot::Inventory6),
+            (&mut self.inventory7, ItemSlot::Inventory7),
+            (&mut self.inventory8, ItemSlot::Inventory8),
+            (&mut self.inventory9, ItemSlot::Inventory9),
+            (&mut self.inventory10, ItemSlot::Inventory10),
+            (&mut self.inventory11, ItemSlot::Inventory11),
+            (&mut self.inventory12, ItemSlot::Inventory12),
+            (&mut self.inventory13, ItemSlot::Inventory13),
+            (&mut self.inventory14, ItemSlot::Inventory14),
+            (&mut self.inventory15, ItemSlot::Inventory15),
+        ];
+
+        for (i, slot) in slots {
+            if i.is_none() {
+                *i = Some(item);
+
+                return Some(slot);
+            }
+        }
+
+        None
+    }
+
     pub fn all_slots(&self) -> [(Option<&Item>, ItemSlot); 113] {
         [
             (self.head.as_ref(), ItemSlot::Head),

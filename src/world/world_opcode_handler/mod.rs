@@ -31,7 +31,7 @@ pub async fn handle_received_client_opcodes(
     client: &mut Client,
     clients: &mut [Client],
     creatures: &mut [Creature],
-    mut db: WorldDatabase,
+    db: &mut WorldDatabase,
     locations: &[(Position, String)],
     move_to_character_screen: &mut bool,
 ) {
@@ -581,80 +581,61 @@ pub async fn handle_received_client_opcodes(
                     .await;
             }
             ClientOpcodeMessage::CMSG_SWAP_INV_ITEM(c) => {
-                if let Some(source) = client.character_mut().inventory.take(c.source_slot) {
-                    if let Some(destination) =
-                        client.character_mut().inventory.take(c.destination_slot)
-                    {
+                client
+                    .character_mut()
+                    .inventory
+                    .swap(c.source_slot, c.destination_slot);
+                let mut player = UpdatePlayerBuilder::new()
+                    .set_player_field_inv(
+                        c.source_slot,
                         client
-                            .character_mut()
+                            .character()
                             .inventory
-                            .set(c.destination_slot, source);
+                            .get(c.source_slot)
+                            .map(|a| a.guid)
+                            .unwrap_or(Guid::zero()),
+                    )
+                    .set_player_field_inv(
+                        c.destination_slot,
                         client
-                            .character_mut()
+                            .character()
                             .inventory
-                            .set(c.source_slot, destination);
-                    } else {
-                        client
-                            .character_mut()
-                            .inventory
-                            .set(c.destination_slot, source);
-                        client.character_mut().inventory.clear(c.source_slot);
-                    }
+                            .get(c.destination_slot)
+                            .map(|a| a.guid)
+                            .unwrap_or(Guid::zero()),
+                    );
 
-                    let mut player = UpdatePlayerBuilder::new()
-                        .set_player_field_inv(
-                            c.source_slot,
-                            client
-                                .character()
-                                .inventory
-                                .get(c.source_slot)
-                                .map(|a| a.guid)
-                                .unwrap_or(Guid::zero()),
+                for (i, (item, _)) in client.character().inventory.equipment().iter().enumerate() {
+                    let (item, random_property, creator) = if let Some(item) = item {
+                        (
+                            item.item.entry(),
+                            item.item.random_property() as u32,
+                            item.creator,
                         )
-                        .set_player_field_inv(
-                            c.destination_slot,
-                            client
-                                .character()
-                                .inventory
-                                .get(c.destination_slot)
-                                .map(|a| a.guid)
-                                .unwrap_or(Guid::zero()),
-                        );
-
-                    for (i, (item, _)) in
-                        client.character().inventory.equipment().iter().enumerate()
-                    {
-                        let (item, random_property, creator) = if let Some(item) = item {
-                            (
-                                item.item.entry(),
-                                item.item.random_property() as u32,
-                                item.creator,
-                            )
-                        } else {
-                            (0, 0, Guid::zero())
-                        };
-                        if let Ok(index) = VisibleItemIndex::try_from(i) {
-                            let visible_item =
-                                VisibleItem::new(creator, item, [0, 0], random_property, 0);
-                            player = player.set_player_visible_item(visible_item, index);
-                        }
-                    }
-
-                    let update = SMSG_UPDATE_OBJECT {
-                        has_transport: 0,
-                        objects: vec![Object {
-                            update_type: Object_UpdateType::Values {
-                                guid1: client.character().guid,
-                                mask1: UpdateMask::Player(player.finalize()),
-                            },
-                        }],
+                    } else {
+                        (0, 0, Guid::zero())
                     };
-
-                    client.send_message(update.clone()).await;
-
-                    for c in &mut *clients {
-                        c.send_message(update.clone()).await;
+                    if let Ok(index) = VisibleItemIndex::try_from(i) {
+                        let visible_item =
+                            VisibleItem::new(creator, item, [0, 0], random_property, 0);
+                        player = player.set_player_visible_item(visible_item, index);
                     }
+                }
+
+                let update = SMSG_UPDATE_OBJECT {
+                    has_transport: 0,
+                    objects: vec![Object {
+                        update_type: Object_UpdateType::Values {
+                            guid1: client.character().guid,
+                            mask1: UpdateMask::Player(player.finalize()),
+                        },
+                    }],
+                };
+
+                client.send_message(update.clone()).await;
+
+                for c in &mut *clients {
+                    c.send_message(update.clone()).await;
                 }
             }
             _ => {

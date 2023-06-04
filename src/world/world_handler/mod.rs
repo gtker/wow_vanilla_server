@@ -98,7 +98,7 @@ impl World {
                 &mut client,
                 &mut self.clients,
                 &mut self.creatures,
-                db.clone(),
+                db,
                 &self.locations,
                 &mut move_to_character_screen,
             )

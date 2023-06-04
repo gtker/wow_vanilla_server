@@ -199,6 +199,7 @@ pub async fn handle_received_client_opcodes(
                         clients,
                         c.message.trim_start_matches('.'),
                         locations,
+                        db,
                     )
                     .await;
 

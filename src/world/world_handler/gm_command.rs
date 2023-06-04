@@ -1,4 +1,5 @@
 use crate::world::client::Client;
+use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::vanilla::position::{position_from_str, Position};
@@ -19,6 +20,7 @@ pub async fn gm_command(
     clients: &mut [Client],
     message: &str,
     locations: &[(Position, String)],
+    mut db: WorldDatabase,
 ) {
     if message == "north" || message == "south" || message == "east" || message == "west" {
         let mut p = client.character().info.position;
@@ -326,7 +328,14 @@ pub async fn gm_command(
         p.z = p.z + distance;
 
         world_handler::prepare_teleport(p, client).await;
-    } else if message == "item" {
+    } else if let Some(entry) = message.strip_prefix("additem") {
+        let entry = match entry.parse::<i32>() {
+            Ok(e) => e,
+            Err(_) => 12640, // Lionheart Helm
+        };
+
+        let guid = Guid::new(db.new_guid());
+
         client
             .send_opcode(
                 &SMSG_UPDATE_OBJECT {
@@ -334,11 +343,11 @@ pub async fn gm_command(
                     objects: vec![
                         Object {
                             update_type: Object_UpdateType::CreateObject {
-                                guid3: Guid::new(1337_1337),
+                                guid3: guid,
                                 mask2: UpdateMask::Item(
                                     UpdateItemBuilder::new()
-                                        .set_object_guid(1337_1337.into())
-                                        .set_object_entry(12640)
+                                        .set_object_guid(guid)
+                                        .set_object_entry(entry)
                                         .set_object_scale_x(1.0)
                                         .set_item_owner(client.character().guid)
                                         .set_item_contained(client.character().guid)
@@ -359,7 +368,7 @@ pub async fn gm_command(
                                 guid1: client.character().guid,
                                 mask1: UpdateMask::Player(
                                     UpdatePlayerBuilder::new()
-                                        .set_player_field_inv(ItemSlot::Head, 1337_1337.into())
+                                        .set_player_field_inv(ItemSlot::Head, guid)
                                         .finalize(),
                                 ),
                             },
@@ -378,7 +387,7 @@ pub async fn gm_command(
                     alert_chat: NewItemChatAlert::Show,
                     bag_slot: 0xff,
                     item_slot: 24,
-                    item: 12640,
+                    item: entry as u32,
                     item_suffix_factor: 0,
                     item_random_property_id: 0,
                     item_count: 1,

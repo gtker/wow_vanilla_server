@@ -1,7 +1,7 @@
 use crate::world::database::WorldDatabase;
 use crate::world::item::Item;
 use wow_items::vanilla::lookup_item;
-use wow_world_base::vanilla::{ItemSlot, StarterItem};
+use wow_world_base::vanilla::{Guid, ItemSlot, StarterItem};
 use wow_world_messages::vanilla::CharacterGear;
 
 #[derive(Debug, Clone, Default)]
@@ -126,7 +126,12 @@ impl Inventory {
         let mut s = Self::default();
 
         for item in starter_items {
-            let i = Item::new(lookup_item(item.item).unwrap(), db);
+            let i = Item::new(
+                lookup_item(item.item).unwrap(),
+                Guid::zero(),
+                item.amount,
+                db,
+            );
             s.set(item.ty, i);
         }
 

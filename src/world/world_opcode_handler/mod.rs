@@ -3,9 +3,7 @@ use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
-use crate::world::world_handler::{
-    announce_character_login, update_player_builder_visible_id_to_function,
-};
+use crate::world::world_handler::announce_character_login;
 use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::vanilla::position::{position_from_str, Position};
@@ -22,10 +20,11 @@ use wow_world_messages::vanilla::{
     MSG_MOVE_START_SWIM_Server, MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server,
     MSG_MOVE_STOP_PITCH_Server, MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server,
     MSG_MOVE_STOP_Server, MSG_MOVE_STOP_TURN_Server, Object, Object_UpdateType,
-    SMSG_CREATURE_QUERY_RESPONSE_found, UpdateMask, UpdatePlayerBuilder, SMSG_ATTACKERSTATEUPDATE,
-    SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE,
-    SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
-    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE, SMSG_UPDATE_OBJECT,
+    SMSG_CREATURE_QUERY_RESPONSE_found, UpdateMask, UpdatePlayerBuilder, VisibleItem,
+    VisibleItemIndex, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP,
+    SMSG_CREATURE_QUERY_RESPONSE, SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE,
+    SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
+    SMSG_UPDATE_OBJECT,
 };
 
 pub async fn handle_received_client_opcodes(
@@ -624,13 +623,19 @@ pub async fn handle_received_client_opcodes(
                     for (i, (item, _)) in
                         client.character().inventory.equipment().iter().enumerate()
                     {
-                        let item = if let Some(item) = item {
-                            item.item.entry() as i32
+                        let (item, random_property, creator) = if let Some(item) = item {
+                            (
+                                item.item.entry(),
+                                item.item.random_property() as u32,
+                                item.creator,
+                            )
                         } else {
-                            0
+                            (0, 0, Guid::zero())
                         };
-                        if let Some(visible) = update_player_builder_visible_id_to_function(i) {
-                            player = visible(player, item);
+                        if let Ok(index) = VisibleItemIndex::try_from(i) {
+                            let visible_item =
+                                VisibleItem::new(creator, item, [0, 0], random_property, 0);
+                            player = player.set_player_visible_item(visible_item, index);
                         }
                     }
 

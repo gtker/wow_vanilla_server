@@ -23,8 +23,8 @@ use wow_world_messages::vanilla::{
     MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_All,
     MovementBlock_UpdateFlag_Living, MovementInfo, MovementInfo_MovementFlags, Object, ObjectType,
     Object_UpdateType, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex,
-    UpdateItemBuilder, UpdatePlayerBuilder, Vector3d, SMSG_ACCOUNT_DATA_TIMES,
-    SMSG_ATTACKERSTATEUPDATE, SMSG_COMPRESSED_MOVES, SMSG_DESTROY_OBJECT,
+    UpdateItemBuilder, UpdatePlayerBuilder, Vector3d, VisibleItem, VisibleItemIndex,
+    SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE, SMSG_COMPRESSED_MOVES, SMSG_DESTROY_OBJECT,
     SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_INITIAL_SPELLS, SMSG_ITEM_PUSH_RESULT,
     SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD, SMSG_MESSAGECHAT, SMSG_NEW_WORLD,
     SMSG_SPLINE_SET_RUN_SPEED, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS, SMSG_UPDATE_OBJECT,
@@ -248,8 +248,15 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
 
     for (i, (item, slot)) in character.inventory.all_slots().iter().enumerate() {
         if let Some(item) = item {
-            if let Some(visible) = update_player_builder_visible_id_to_function(i) {
-                mask = visible(mask, item.item.entry() as i32);
+            if let Ok(index) = VisibleItemIndex::try_from(i) {
+                let visible_item = VisibleItem::new(
+                    Guid::zero(),
+                    item.item.entry(),
+                    [0, 0],
+                    item.item.random_property() as u32,
+                    0,
+                );
+                mask = mask.set_player_visible_item(visible_item, index);
             }
             mask = mask.set_player_field_inv(*slot, item.guid);
         }
@@ -263,33 +270,6 @@ fn get_update_object_player(character: &Character) -> UpdateMask {
     }
 
     UpdateMask::Player(mask.finalize())
-}
-
-pub(crate) fn update_player_builder_visible_id_to_function(
-    i: usize,
-) -> Option<impl Fn(UpdatePlayerBuilder, i32) -> UpdatePlayerBuilder> {
-    Some(match i {
-        0 => UpdatePlayerBuilder::set_player_visible_item_1_0,
-        1 => UpdatePlayerBuilder::set_player_visible_item_2_0,
-        2 => UpdatePlayerBuilder::set_player_visible_item_3_0,
-        3 => UpdatePlayerBuilder::set_player_visible_item_4_0,
-        4 => UpdatePlayerBuilder::set_player_visible_item_5_0,
-        5 => UpdatePlayerBuilder::set_player_visible_item_6_0,
-        6 => UpdatePlayerBuilder::set_player_visible_item_7_0,
-        7 => UpdatePlayerBuilder::set_player_visible_item_8_0,
-        8 => UpdatePlayerBuilder::set_player_visible_item_9_0,
-        9 => UpdatePlayerBuilder::set_player_visible_item_10_0,
-        10 => UpdatePlayerBuilder::set_player_visible_item_11_0,
-        11 => UpdatePlayerBuilder::set_player_visible_item_12_0,
-        12 => UpdatePlayerBuilder::set_player_visible_item_13_0,
-        13 => UpdatePlayerBuilder::set_player_visible_item_14_0,
-        14 => UpdatePlayerBuilder::set_player_visible_item_15_0,
-        15 => UpdatePlayerBuilder::set_player_visible_item_16_0,
-        16 => UpdatePlayerBuilder::set_player_visible_item_17_0,
-        17 => UpdatePlayerBuilder::set_player_visible_item_18_0,
-        18 => UpdatePlayerBuilder::set_player_visible_item_19_0,
-        _ => return None,
-    })
 }
 
 pub async fn announce_character_login(client: &mut Client, character: &Character) {
@@ -386,6 +366,8 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
                             .set_item_stack_count(item.amount as i32)
                             .set_item_durability(item.item.max_durability())
                             .set_item_maxdurability(item.item.max_durability())
+                            .set_item_creator(item.creator)
+                            .set_item_stack_count(item.amount as i32)
                             .finalize(),
                     ),
                     movement2: MovementBlock {

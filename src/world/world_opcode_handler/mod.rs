@@ -3,7 +3,7 @@ use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
-use crate::world::world_handler::announce_character_login;
+use crate::world::world_handler::{announce_character_login, gm_command};
 use std::time::SystemTime;
 use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::vanilla::position::{position_from_str, Position};
@@ -194,7 +194,7 @@ pub async fn handle_received_client_opcodes(
             }
             ClientOpcodeMessage::CMSG_MESSAGECHAT(c) => {
                 if c.message.starts_with('.') {
-                    world_handler::gm_command(
+                    gm_command::gm_command(
                         client,
                         clients,
                         c.message.trim_start_matches('.'),

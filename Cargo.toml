@@ -7,14 +7,14 @@ edition = "2021"
 
 [dependencies]
 tokio = {version = "1.24.2", features = ["full"]}
-#wow_login_messages = { git="https://github.com/gtker/wow_messages.git", rev = "c9d71523f9f7ea19e5845998db6e76e3b4174ca2", features = ["tokio"] }
-#wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "c9d71523f9f7ea19e5845998db6e76e3b4174ca2", features = ["tokio", "vanilla"] }
-#wow_world_base = { git="https://github.com/gtker/wow_messages.git", rev = "c9d71523f9f7ea19e5845998db6e76e3b4174ca2", features = ["extended", "vanilla"] }
-#wow_items = { git="https://github.com/gtker/wow_messages.git", rev = "c9d71523f9f7ea19e5845998db6e76e3b4174ca2", features = ["vanilla", "unobtainable"] }
+wow_login_messages = { git="https://github.com/gtker/wow_messages.git", rev = "c0b4ac2ae61d3bb49d21dd5be2bc9ff64f11fbed", features = ["tokio"] }
+wow_world_messages = { git="https://github.com/gtker/wow_messages.git", rev = "c0b4ac2ae61d3bb49d21dd5be2bc9ff64f11fbed", features = ["tokio", "vanilla"] }
+wow_world_base = { git="https://github.com/gtker/wow_messages.git", rev = "c0b4ac2ae61d3bb49d21dd5be2bc9ff64f11fbed", features = ["extended", "vanilla"] }
+wow_items = { git="https://github.com/gtker/wow_messages.git", rev = "c0b4ac2ae61d3bb49d21dd5be2bc9ff64f11fbed", features = ["vanilla", "unobtainable"] }
 
-wow_login_messages = { path = "../wow_messages/wow_login_messages", features = ["tokio"] }
-wow_world_messages = { path = "../wow_messages/wow_world_messages", features = ["tokio", "vanilla"] }
-wow_world_base = { path = "../wow_messages/wow_world_base", features = ["extended", "vanilla"] }
-wow_items = { path = "../wow_messages/wow_items", features = ["vanilla", "unobtainable"] }
+#wow_login_messages = { path = "../wow_messages/wow_login_messages", features = ["tokio"] }
+#wow_world_messages = { path = "../wow_messages/wow_world_messages", features = ["tokio", "vanilla"] }
+#wow_world_base = { path = "../wow_messages/wow_world_base", features = ["extended", "vanilla"] }
+#wow_items = { path = "../wow_messages/wow_items", features = ["vanilla", "unobtainable"] }
 
 wow_srp = "0.6.0"

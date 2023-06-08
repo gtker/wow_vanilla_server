@@ -511,22 +511,18 @@ pub async fn handle_received_client_opcodes(
                 }
                 client.character_mut().auto_attack_timer = UNARMED_SPEED;
 
-                for c in &mut *clients {
-                    c.send_message(SMSG_ATTACKSTART {
+                send_to_all(
+                    SMSG_ATTACKSTART {
                         attacker: client.character().guid,
                         victim: client.character().target,
-                    })
-                    .await;
-                }
-                client
-                    .send_message(SMSG_ATTACKSTART {
-                        attacker: client.character().guid,
-                        victim: client.character().target,
-                    })
-                    .await;
+                    },
+                    client,
+                    clients,
+                )
+                .await;
 
-                client
-                    .send_message(SMSG_ATTACKERSTATEUPDATE {
+                send_to_all(
+                    SMSG_ATTACKERSTATEUPDATE {
                         hit_info: HitInfo::CriticalHit,
                         attacker: client.character().guid,
                         target: client.character().target,
@@ -542,47 +538,25 @@ pub async fn handle_received_client_opcodes(
                         spell_id: 0,
                         damage_state: 0,
                         blocked_amount: 0,
-                    })
-                    .await;
-                for c in &mut *clients {
-                    c.send_message(SMSG_ATTACKERSTATEUPDATE {
-                        hit_info: HitInfo::CriticalHit,
-                        attacker: client.character().guid,
-                        target: client.character().target,
-                        total_damage: 1337,
-                        damages: vec![DamageInfo {
-                            spell_school_mask: 0,
-                            damage_float: 1332.0,
-                            damage_uint: 1332,
-                            absorb: 0,
-                            resist: 0,
-                        }],
-                        unknown1: 0,
-                        spell_id: 0,
-                        damage_state: 0,
-                        blocked_amount: 0,
-                    })
-                    .await;
-                }
+                    },
+                    client,
+                    clients,
+                )
+                .await;
             }
             ClientOpcodeMessage::CMSG_ATTACKSTOP => {
                 client.character_mut().attacking = false;
 
-                for c in &mut *clients {
-                    c.send_message(SMSG_ATTACKSTOP {
+                send_to_all(
+                    SMSG_ATTACKSTOP {
                         player: client.character().guid,
                         enemy: client.character().target,
                         unknown1: 0,
-                    })
-                    .await;
-                }
-                client
-                    .send_message(SMSG_ATTACKSTOP {
-                        player: client.character().guid,
-                        enemy: client.character().target,
-                        unknown1: 0,
-                    })
-                    .await;
+                    },
+                    client,
+                    clients,
+                )
+                .await;
             }
             ClientOpcodeMessage::CMSG_SWAP_INV_ITEM(c) => {
                 client
@@ -626,41 +600,47 @@ pub async fn handle_received_client_opcodes(
                     }
                 }
 
-                let update = SMSG_UPDATE_OBJECT {
-                    has_transport: 0,
-                    objects: vec![Object {
-                        update_type: Object_UpdateType::Values {
-                            guid1: client.character().guid,
-                            mask1: UpdateMask::Player(player.finalize()),
-                        },
-                    }],
-                };
-
-                client.send_message(update.clone()).await;
-
-                for c in &mut *clients {
-                    c.send_message(update.clone()).await;
-                }
+                send_to_all(
+                    SMSG_UPDATE_OBJECT {
+                        has_transport: 0,
+                        objects: vec![Object {
+                            update_type: Object_UpdateType::Values {
+                                guid1: client.character().guid,
+                                mask1: UpdateMask::Player(player.finalize()),
+                            },
+                        }],
+                    },
+                    client,
+                    clients,
+                )
+                .await;
             }
             ClientOpcodeMessage::CMSG_TEXT_EMOTE(v) => {
                 client
                     .send_system_message(format!("{}, {:#08X}", v.text_emote, v.emote))
                     .await;
 
-                let emote = SMSG_EMOTE {
-                    emote: v.text_emote.to_emote(),
-                    guid: client.character().guid,
-                };
+                send_to_all(
+                    SMSG_EMOTE {
+                        emote: v.text_emote.to_emote(),
+                        guid: client.character().guid,
+                    },
+                    client,
+                    clients,
+                )
+                .await;
 
-                let text = SMSG_TEXT_EMOTE {
-                    guid: client.character().guid,
-                    text_emote: v.text_emote,
-                    emote: v.emote,
-                    name: "".to_string(),
-                };
-
-                send_to_all(emote, client, clients).await;
-                send_to_all(text, client, clients).await;
+                send_to_all(
+                    SMSG_TEXT_EMOTE {
+                        guid: client.character().guid,
+                        text_emote: v.text_emote,
+                        emote: v.emote,
+                        name: "".to_string(),
+                    },
+                    client,
+                    clients,
+                )
+                .await;
             }
             v => {
                 write_test(&v);
@@ -710,7 +690,7 @@ fn find_wowm_file(name: &str) -> Option<PathBuf> {
         .into_iter()
         .filter_map(|a| a.ok())
     {
-        let Ok(contents) =  read_to_string(file.path()) else {
+        let Ok(contents) = read_to_string(file.path()) else {
             continue;
         };
 

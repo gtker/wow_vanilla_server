@@ -1,10 +1,14 @@
+use crate::file_utils::append_string_to_file;
 use crate::world::chat::handle_message;
 use crate::world::client::{CharacterScreenProgress, Client};
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler;
 use crate::world::world_handler::{announce_character_login, gm_command};
+use std::fs::read_to_string;
+use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+use walkdir::WalkDir;
 use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::trigger::Trigger;
@@ -20,11 +24,11 @@ use wow_world_messages::vanilla::{
     MSG_MOVE_START_SWIM_Server, MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server,
     MSG_MOVE_STOP_PITCH_Server, MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server,
     MSG_MOVE_STOP_Server, MSG_MOVE_STOP_TURN_Server, Object, Object_UpdateType,
-    SMSG_CREATURE_QUERY_RESPONSE_found, UpdateMask, UpdatePlayerBuilder, VisibleItem,
-    VisibleItemIndex, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP,
-    SMSG_CREATURE_QUERY_RESPONSE, SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE,
-    SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE,
-    SMSG_UPDATE_OBJECT,
+    SMSG_CREATURE_QUERY_RESPONSE_found, ServerMessage, UpdateMask, UpdatePlayerBuilder,
+    VisibleItem, VisibleItemIndex, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP,
+    SMSG_CREATURE_QUERY_RESPONSE, SMSG_EMOTE, SMSG_ITEM_QUERY_SINGLE_RESPONSE,
+    SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG,
+    SMSG_QUERY_TIME_RESPONSE, SMSG_TEXT_EMOTE, SMSG_UPDATE_OBJECT,
 };
 
 pub async fn handle_received_client_opcodes(
@@ -638,15 +642,82 @@ pub async fn handle_received_client_opcodes(
                     c.send_message(update.clone()).await;
                 }
             }
-            _ => {
-                dbg!(opcode);
+            ClientOpcodeMessage::CMSG_TEXT_EMOTE(v) => {
+                client
+                    .send_system_message(format!("{}, {:#08X}", v.text_emote, v.emote))
+                    .await;
+
+                let emote = SMSG_EMOTE {
+                    emote: v.text_emote.to_emote(),
+                    guid: client.character().guid,
+                };
+
+                let text = SMSG_TEXT_EMOTE {
+                    guid: client.character().guid,
+                    text_emote: v.text_emote,
+                    emote: v.emote,
+                    name: "".to_string(),
+                };
+
+                send_to_all(emote, client, clients).await;
+                send_to_all(text, client, clients).await;
+            }
+            v => {
+                write_test(&v);
             }
         }
     }
+}
+
+async fn send_to_all(
+    message: impl ServerMessage + Clone + Sync,
+    client: &mut Client,
+    clients: &mut [Client],
+) {
+    for client in clients {
+        client.send_message(message.clone()).await;
+    }
+
+    client.send_message(message).await;
 }
 
 async fn send_movement_to_clients(message: ServerOpcodeMessage, clients: &mut [Client]) {
     for c in clients {
         c.send_opcode(&message).await;
     }
+}
+
+pub(crate) fn write_test(msg: &ClientOpcodeMessage) {
+    if let Some(contents) = msg.to_test_case_string() {
+        let name = msg.message_name();
+        if let Some(path) = find_wowm_file(name) {
+            println!("Added {name} to {path}", path = path.display());
+            append_string_to_file("\n", &path);
+            append_string_to_file(&contents, &path);
+        } else {
+            let path = Path::new("./tests.wowm");
+            println!("Added {name} to {path}", path = path.display());
+            append_string_to_file("\n", path);
+            append_string_to_file(&contents, path);
+        }
+    } else {
+        dbg!(&msg);
+    }
+}
+
+fn find_wowm_file(name: &str) -> Option<PathBuf> {
+    for file in WalkDir::new(Path::new("../wow_messages/wow_message_parser/wowm"))
+        .into_iter()
+        .filter_map(|a| a.ok())
+    {
+        let Ok(contents) =  read_to_string(file.path()) else {
+            continue;
+        };
+
+        if contents.contains(name) {
+            return Some(file.path().to_path_buf());
+        }
+    }
+
+    None
 }

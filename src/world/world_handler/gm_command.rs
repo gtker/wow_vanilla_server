@@ -6,14 +6,13 @@ use wow_items::vanilla::lookup_item;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::{
-    Map, NewItemChatAlert, NewItemCreationType, NewItemSource, ObjectType, SplineFlag, Vector2d,
-    Vector3d,
+    Map, NewItemChatAlert, NewItemCreationType, NewItemSource, SplineFlag, Vector2d, Vector3d,
 };
 use wow_world_messages::vanilla::{
     CompressedMove, CompressedMove_CompressedMoveOpcode, MonsterMove, MonsterMove_MonsterMoveType,
-    MovementBlock, MovementBlock_UpdateFlag, Object, Object_UpdateType, UpdateItemBuilder,
-    UpdateMask, UpdatePlayerBuilder, SMSG_COMPRESSED_MOVES, SMSG_FORCE_RUN_SPEED_CHANGE,
-    SMSG_ITEM_PUSH_RESULT, SMSG_SPLINE_SET_RUN_SPEED, SMSG_UPDATE_OBJECT,
+    Object, Object_UpdateType, UpdatePlayerBuilder, SMSG_COMPRESSED_MOVES,
+    SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_ITEM_PUSH_RESULT, SMSG_SPLINE_SET_RUN_SPEED,
+    SMSG_UPDATE_OBJECT,
 };
 
 pub async fn gm_command(
@@ -343,9 +342,6 @@ pub async fn gm_command(
         const AMOUNT: u8 = 1;
 
         let item = Item::new(item_entry, client.character().guid, AMOUNT, &mut db);
-        let guid = item.guid;
-
-        let durability = item.item.max_durability();
 
         let item_slot = client
             .character_mut()
@@ -361,36 +357,14 @@ pub async fn gm_command(
                 &SMSG_UPDATE_OBJECT {
                     has_transport: 0,
                     objects: vec![
-                        Object {
-                            update_type: Object_UpdateType::CreateObject {
-                                guid3: guid,
-                                mask2: UpdateMask::Item(
-                                    UpdateItemBuilder::new()
-                                        .set_object_guid(guid)
-                                        .set_object_entry(entry)
-                                        .set_object_scale_x(1.0)
-                                        .set_item_owner(client.character().guid)
-                                        .set_item_contained(client.character().guid)
-                                        .set_item_stack_count(AMOUNT as i32)
-                                        .set_item_durability(durability)
-                                        .set_item_maxdurability(durability)
-                                        .set_item_creator(client.character().guid)
-                                        .finalize(),
-                                ),
-                                movement2: MovementBlock {
-                                    update_flag: MovementBlock_UpdateFlag::empty(),
-                                },
-                                object_type: ObjectType::Item,
-                            },
-                        },
+                        item.to_create_item_object(client.character().guid),
                         Object {
                             update_type: Object_UpdateType::Values {
                                 guid1: client.character().guid,
-                                mask1: UpdateMask::Player(
-                                    UpdatePlayerBuilder::new()
-                                        .set_player_field_inv(item_slot, guid)
-                                        .finalize(),
-                                ),
+                                mask1: UpdatePlayerBuilder::new()
+                                    .set_player_field_inv(item_slot, item.guid)
+                                    .finalize()
+                                    .into(),
                             },
                         },
                     ],

@@ -21,8 +21,8 @@ use wow_world_messages::vanilla::{
     DamageInfo, InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
     MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
     MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
-    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdateItemBuilder, UpdatePlayerBuilder,
-    Vector3d, VisibleItem, VisibleItemIndex, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE,
+    SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdatePlayerBuilder, Vector3d,
+    VisibleItem, VisibleItemIndex, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE,
     SMSG_DESTROY_OBJECT, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD,
     SMSG_MESSAGECHAT, SMSG_NEW_WORLD, SMSG_TRANSFER_PENDING, SMSG_TUTORIAL_FLAGS,
     SMSG_UPDATE_OBJECT,
@@ -349,31 +349,7 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
         .inventory
         .all_slots()
         .iter()
-        .filter_map(|(item, _)| {
-            item.map(|item| Object {
-                update_type: Object_UpdateType::CreateObject {
-                    guid3: item.guid,
-                    mask2: UpdateMask::Item(
-                        UpdateItemBuilder::new()
-                            .set_object_guid(item.guid)
-                            .set_object_entry(item.item.entry() as i32)
-                            .set_object_scale_x(1.0)
-                            .set_item_owner(character.guid)
-                            .set_item_contained(character.guid)
-                            .set_item_stack_count(item.amount as i32)
-                            .set_item_durability(item.item.max_durability())
-                            .set_item_maxdurability(item.item.max_durability())
-                            .set_item_creator(item.creator)
-                            .set_item_stack_count(item.amount as i32)
-                            .finalize(),
-                    ),
-                    movement2: MovementBlock {
-                        update_flag: MovementBlock_UpdateFlag::empty(),
-                    },
-                    object_type: ObjectType::Item,
-                },
-            })
-        })
+        .filter_map(|(item, _)| item.map(|item| item.to_create_item_object(character.guid)))
         .collect();
 
     v.push(

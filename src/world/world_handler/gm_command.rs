@@ -413,7 +413,7 @@ pub async fn gm_command(
                             },
                         },
                     },
-                    guid: 100.into(),
+                    guid: 100_u64.into(),
                 }],
             })
             .await;

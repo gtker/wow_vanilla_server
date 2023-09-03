@@ -179,15 +179,12 @@ impl CharacterScreenClient {
                                 read.read_exact(&mut v).await.unwrap();
                                 dbg!(name, opcode, size, v);
                             }
-                            ExpectedOpcodeError::Parse(ref p) => match p {
-                                ParseError::Io(i) => match i.kind() {
-                                    ErrorKind::UnexpectedEof => {
-                                        break;
-                                    }
-                                    _ => println!("DC: {:#?}", e),
-                                },
-                                _ => println!("DC: {:#?}", e),
-                            },
+                            ExpectedOpcodeError::Parse(ref p) => {
+                                println!("{:#?}", p);
+                            }
+                            ExpectedOpcodeError::Io(_) => {
+                                break;
+                            }
                         }
                         continue;
                     }

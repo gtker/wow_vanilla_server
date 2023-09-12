@@ -597,6 +597,8 @@ pub(crate) fn write_test(msg: &ClientOpcodeMessage) {
 }
 
 fn find_wowm_file(name: &str) -> Option<PathBuf> {
+    let search_name = format!(" {name} ");
+
     for file in WalkDir::new(Path::new("../wow_messages/wow_message_parser/wowm"))
         .into_iter()
         .filter_map(|a| a.ok())
@@ -605,7 +607,7 @@ fn find_wowm_file(name: &str) -> Option<PathBuf> {
             continue;
         };
 
-        if contents.contains(name) {
+        if contents.contains(&search_name) {
             return Some(file.path().to_path_buf());
         }
     }

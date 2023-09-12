@@ -1,4 +1,5 @@
 use crate::world::character::Character;
+use crate::world::world_opcode_handler::{write_server_test, write_test_case_inner};
 use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::net::TcpStream;
@@ -66,12 +67,18 @@ impl Client {
     }
 
     pub async fn send_message(&mut self, m: impl ServerMessage + Sync) {
+        if let Some(contents) = m.to_test_case_string() {
+            write_test_case_inner(&contents, m.message_name());
+        }
+
         m.tokio_write_encrypted_server(&mut self.write, &mut self.encrypter)
             .await
             .unwrap();
     }
 
     pub async fn send_opcode(&mut self, m: &ServerOpcodeMessage) {
+        write_server_test(m);
+
         m.tokio_write_encrypted_server(&mut self.write, &mut self.encrypter)
             .await
             .unwrap();

@@ -48,16 +48,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "cipher"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "773f3b9af64447d2ce9850330c473515014aa235e6a783b02db81ff39e4a3dad"
-dependencies = [
- "crypto-common",
- "inout",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -144,15 +134,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest",
-]
-
-[[package]]
-name = "inout"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0c10553d664a4d0bcff9f4215d0aac67a639cc68ef660840afe309b807bc9f5"
-dependencies = [
- "generic-array",
 ]
 
 [[package]]
@@ -339,15 +320,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
-]
-
-[[package]]
-name = "rc4"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f1256e23efe6097f27aa82d6ca6889361c001586ae0f6917cbad072f05eb275"
-dependencies = [
- "cipher",
 ]
 
 [[package]]
@@ -663,7 +635,7 @@ checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 [[package]]
 name = "wow_items"
 version = "0.1.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=fb73b5fdda914039700ac7dc65a579f0c40c9d96#fb73b5fdda914039700ac7dc65a579f0c40c9d96"
+source = "git+https://github.com/gtker/wow_messages.git?rev=d0864e8ccad342bfb10d844401749047187265b6#d0864e8ccad342bfb10d844401749047187265b6"
 dependencies = [
  "wow_world_base",
 ]
@@ -671,7 +643,7 @@ dependencies = [
 [[package]]
 name = "wow_login_messages"
 version = "0.3.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=fb73b5fdda914039700ac7dc65a579f0c40c9d96#fb73b5fdda914039700ac7dc65a579f0c40c9d96"
+source = "git+https://github.com/gtker/wow_messages.git?rev=d0864e8ccad342bfb10d844401749047187265b6#d0864e8ccad342bfb10d844401749047187265b6"
 dependencies = [
  "tokio",
 ]
@@ -679,13 +651,11 @@ dependencies = [
 [[package]]
 name = "wow_srp"
 version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f681cc00a427cd3670da8b98b908cb04dc63e23f715022df5de4802723c4c1bc"
+source = "git+https://github.com/gtker/wow_srp.git?rev=9c5382a2915850efc69f05d7985ab06b3ec13163#9c5382a2915850efc69f05d7985ab06b3ec13163"
 dependencies = [
  "hmac",
  "num-bigint",
  "rand",
- "rc4",
  "sha-1",
 ]
 
@@ -705,12 +675,12 @@ dependencies = [
 [[package]]
 name = "wow_world_base"
 version = "0.1.1"
-source = "git+https://github.com/gtker/wow_messages.git?rev=fb73b5fdda914039700ac7dc65a579f0c40c9d96#fb73b5fdda914039700ac7dc65a579f0c40c9d96"
+source = "git+https://github.com/gtker/wow_messages.git?rev=d0864e8ccad342bfb10d844401749047187265b6#d0864e8ccad342bfb10d844401749047187265b6"
 
 [[package]]
 name = "wow_world_messages"
 version = "0.1.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=fb73b5fdda914039700ac7dc65a579f0c40c9d96#fb73b5fdda914039700ac7dc65a579f0c40c9d96"
+source = "git+https://github.com/gtker/wow_messages.git?rev=d0864e8ccad342bfb10d844401749047187265b6#d0864e8ccad342bfb10d844401749047187265b6"
 dependencies = [
  "flate2",
  "tokio",

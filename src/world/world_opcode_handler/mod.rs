@@ -554,7 +554,7 @@ pub async fn handle_received_client_opcodes(
                 .await;
             }
             v => {
-                write_test(&v);
+                write_client_test(&v);
             }
         }
     }
@@ -578,21 +578,30 @@ async fn send_movement_to_clients(message: ServerOpcodeMessage, clients: &mut [C
     }
 }
 
-pub(crate) fn write_test(msg: &ClientOpcodeMessage) {
+pub(crate) fn write_client_test(msg: &ClientOpcodeMessage) {
     if let Some(contents) = msg.to_test_case_string() {
-        let name = msg.message_name();
-        if let Some(path) = find_wowm_file(name) {
-            println!("Added {name} to {path}", path = path.display());
-            append_string_to_file("\n", &path);
-            append_string_to_file(&contents, &path);
-        } else {
-            let path = Path::new("./tests.wowm");
-            println!("Added {name} to {path}", path = path.display());
-            append_string_to_file("\n", path);
-            append_string_to_file(&contents, path);
-        }
+        write_test_case_inner(contents.as_str(), msg.message_name());
     } else {
         dbg!(&msg);
+    }
+}
+
+pub(crate) fn write_server_test(msg: &ServerOpcodeMessage) {
+    if let Some(contents) = msg.to_test_case_string() {
+        write_test_case_inner(contents.as_str(), msg.message_name());
+    }
+}
+
+pub(crate) fn write_test_case_inner(contents: &str, message_name: &str) {
+    if let Some(path) = find_wowm_file(message_name) {
+        println!("Added {message_name} to {path}", path = path.display());
+        append_string_to_file("\n", &path);
+        append_string_to_file(&contents, &path);
+    } else {
+        let path = Path::new("./tests.wowm");
+        println!("Added {message_name} to {path}", path = path.display());
+        append_string_to_file("\n", path);
+        append_string_to_file(&contents, path);
     }
 }
 

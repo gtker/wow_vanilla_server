@@ -90,7 +90,7 @@ async fn character_screen(
     };
 
     let mut encryption = seed
-        .into_header_crypto(
+        .into_server_header_crypto(
             &NormalizedString::new(&account_name).unwrap(),
             session_key,
             c.client_proof,

@@ -2,7 +2,7 @@ use crate::world::char_create;
 use crate::world::client::{CharacterScreenClient, CharacterScreenProgress};
 use crate::world::database::WorldDatabase;
 use crate::world::world_handler::get_client_login_messages;
-use crate::world::world_opcode_handler::write_test;
+use crate::world::world_opcode_handler::write_client_test;
 use wow_world_messages::vanilla::opcodes::ClientOpcodeMessage;
 use wow_world_messages::vanilla::{
     Character, WorldResult, SMSG_CHAR_CREATE, SMSG_CHAR_ENUM, SMSG_PONG,
@@ -63,7 +63,7 @@ pub async fn handle_character_screen_opcodes(
             }
             e => {
                 dbg!(&e);
-                write_test(&e);
+                write_client_test(&e);
             }
         }
     }

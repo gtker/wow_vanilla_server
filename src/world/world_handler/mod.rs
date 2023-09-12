@@ -14,7 +14,7 @@ use wow_world_base::movement::{
     DEFAULT_RUNNING_BACKWARDS_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED,
 };
 use wow_world_base::vanilla::position::Position;
-use wow_world_base::vanilla::{HitInfo, Map};
+use wow_world_base::vanilla::HitInfo;
 use wow_world_messages::vanilla::opcodes::ServerOpcodeMessage;
 use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
@@ -36,20 +36,15 @@ pub struct World {
     clients_waiting_to_join: Receiver<CharacterScreenClient>,
 
     creatures: Vec<Creature>,
-
-    locations: Vec<(Position, String)>,
 }
 
 impl World {
     pub fn new(rx: Receiver<CharacterScreenClient>) -> Self {
-        let locations = read_locations();
-
         Self {
             clients: vec![],
             clients_on_character_screen: vec![],
             clients_waiting_to_join: rx,
             creatures: vec![Creature::new("Thing")],
-            locations,
         }
     }
 
@@ -99,7 +94,6 @@ impl World {
                 &mut self.clients,
                 &mut self.creatures,
                 db,
-                &self.locations,
                 &mut move_to_character_screen,
             )
             .await;
@@ -411,27 +405,4 @@ pub async fn prepare_teleport(p: Position, client: &mut Client) {
     client.character_mut().info.orientation = p.orientation;
     client.character_mut().map = p.map;
     client.in_process_of_teleport = true;
-}
-
-fn read_locations() -> Vec<(Position, String)> {
-    let b = "";
-    let mut v = Vec::new();
-
-    for line in b.lines() {
-        if line.is_empty() {
-            continue;
-        }
-
-        let coords: Vec<&str> = line.split(',').collect();
-        let map = coords[0].trim().parse::<u32>().unwrap();
-        let map = Map::try_from(map).unwrap();
-        let x = coords[1].trim().parse::<f32>().unwrap();
-        let y = coords[2].trim().parse::<f32>().unwrap();
-        let z = coords[3].trim().parse::<f32>().unwrap();
-        let description = coords[4].to_string().replace('\"', "");
-
-        v.push((Position::new(map, x, y, z, 0.0), description));
-    }
-
-    v
 }

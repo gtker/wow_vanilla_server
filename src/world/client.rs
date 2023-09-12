@@ -1,5 +1,4 @@
 use crate::world::character::Character;
-use std::io::ErrorKind;
 use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::net::TcpStream;
@@ -9,7 +8,7 @@ use tokio::task::JoinHandle;
 use wow_srp::vanilla_header::{EncrypterHalf, HeaderCrypto};
 use wow_world_base::geometry::distance_between;
 use wow_world_base::vanilla::position::Position;
-use wow_world_messages::errors::{ExpectedOpcodeError, ParseError};
+use wow_world_messages::errors::ExpectedOpcodeError;
 use wow_world_messages::vanilla::opcodes::{ClientOpcodeMessage, ServerOpcodeMessage};
 use wow_world_messages::vanilla::{
     Language, MovementInfo, PlayerChatTag, SMSG_MESSAGECHAT_ChatType, ServerMessage, Vector3d,

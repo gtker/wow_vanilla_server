@@ -1,6 +1,7 @@
 mod parser;
 
 use crate::world::client::Client;
+use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
 use crate::world::item::Item;
 use crate::world::world_handler;
@@ -18,6 +19,7 @@ use wow_world_messages::vanilla::{
 pub async fn gm_command(
     client: &mut Client,
     clients: &mut [Client],
+    creatures: &mut [Creature],
     message: &str,
     mut db: &mut WorldDatabase,
 ) {
@@ -188,6 +190,29 @@ pub async fn gm_command(
                     }],
                 })
                 .await;
+        }
+        GmCommand::Information(target) => {
+            let info = if let Some(target) = clients.iter().find(|a| a.character().guid == target) {
+                let name = target.character().name.as_str();
+                let guid = target.character().guid;
+                let race = target.character().race_class;
+                let gender = target.character().gender;
+                let level = target.character().level;
+
+                format!("Player '{name}' ({guid})\nLevel {level} {gender} {race}")
+            } else if let Some(target) = creatures.iter().find(|a| a.guid == target) {
+                let name = target.name.as_str();
+                let guid = target.guid;
+
+                format!("Creature '{name}' ({guid})")
+            } else {
+                client
+                    .send_system_message(format!("Unable to find target '{target}'"))
+                    .await;
+                return;
+            };
+
+            client.send_system_message(info).await;
         }
     }
 }

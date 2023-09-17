@@ -199,8 +199,14 @@ pub async fn handle_received_client_opcodes(
             }
             ClientOpcodeMessage::CMSG_MESSAGECHAT(c) => {
                 if c.message.starts_with('.') {
-                    gm_command::gm_command(client, clients, c.message.trim_start_matches('.'), db)
-                        .await;
+                    gm_command::gm_command(
+                        client,
+                        clients,
+                        creatures,
+                        c.message.trim_start_matches('.'),
+                        db,
+                    )
+                    .await;
 
                     return;
                 }

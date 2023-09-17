@@ -1,6 +1,7 @@
 use crate::world::client::Client;
 use wow_items::vanilla::lookup_item;
 use wow_world_base::geometry::trace_point_2d;
+use wow_world_base::shared::Guid;
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::{Item, Map, Vector2d};
 
@@ -12,6 +13,7 @@ pub(crate) enum GmCommand {
     RangeToTarget(f32),
     AddItem(&'static Item),
     MoveNpc,
+    Information(Guid),
 }
 
 impl GmCommand {
@@ -42,6 +44,20 @@ impl GmCommand {
             Self::Teleport(p)
         } else if message == "whereami" {
             Self::WhereAmI
+        } else if let Some(target) = message.strip_prefix("info") {
+            let target = target.trim();
+
+            let target = if let Ok(target) = target.parse::<u64>() {
+                Guid::new(target)
+            } else if !client.character().target.is_zero() {
+                client.character().target
+            } else if !target.is_empty() {
+                return Err("No target selected".to_string());
+            } else {
+                return Err(format!("Parameter '{target}' is not a valid GUID"));
+            };
+
+            Self::Information(target)
         } else if let Some(location) = message.strip_prefix("tp") {
             let location = location.trim();
             if let Some(p) = position_from_str(location) {

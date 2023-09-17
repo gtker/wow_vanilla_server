@@ -115,22 +115,25 @@ impl Client {
     }
 
     pub fn distance_to_center(&self, other: &Self) -> Option<f32> {
-        let (self_x, self_y, self_z) = self.coordinates();
-        let (other_x, other_y, other_z) = other.coordinates();
+        let position = other.position();
+        self.distance_to_position(&position)
+    }
 
-        if self.character().map == other.character().map {
-            Some(distance_between(
-                Vector3d {
-                    x: self_x,
-                    y: self_y,
-                    z: self_z,
-                },
-                Vector3d {
-                    x: other_x,
-                    y: other_y,
-                    z: other_z,
-                },
-            ))
+    pub fn distance_to_position(&self, position: &Position) -> Option<f32> {
+        let self_vector = self.position();
+        let self_vector = Vector3d {
+            x: self_vector.x,
+            y: self_vector.y,
+            z: self_vector.z,
+        };
+        let position_vector = Vector3d {
+            x: position.x,
+            y: position.y,
+            z: position.z,
+        };
+
+        if self.character().map == position.map {
+            Some(distance_between(self_vector, position_vector))
         } else {
             None
         }

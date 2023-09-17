@@ -23,7 +23,7 @@ pub async fn gm_command(
     message: &str,
     mut db: &mut WorldDatabase,
 ) {
-    let command = match GmCommand::from_player_command(message, client, clients) {
+    let command = match GmCommand::from_player_command(message, client, clients, creatures) {
         Ok(e) => e,
         Err(e) => {
             client.send_system_message(e).await;

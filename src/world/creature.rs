@@ -1,5 +1,6 @@
 use wow_world_base::movement::{DEFAULT_RUNNING_SPEED, DEFAULT_TURN_SPEED, DEFAULT_WALKING_SPEED};
-use wow_world_base::vanilla::position::{position, PositionIdentifier};
+use wow_world_base::vanilla::position::{position, Position, PositionIdentifier};
+use wow_world_base::vanilla::Map;
 use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
     MovementBlock, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo, Object,
@@ -12,6 +13,7 @@ pub struct Creature {
     pub name: String,
     pub guid: Guid,
     pub info: MovementInfo,
+    pub map: Map,
     pub level: u8,
     pub display_id: u16,
     pub entry: u32,
@@ -36,10 +38,21 @@ impl Creature {
                 orientation: p.orientation,
                 fall_time: 0.0,
             },
+            map: p.map,
             level: 1,
             display_id: 646,
             entry: 69,
             faction_template: 16,
+        }
+    }
+
+    pub fn position(&self) -> Position {
+        Position {
+            map: self.map,
+            x: self.info.position.x,
+            y: self.info.position.y,
+            z: self.info.position.z,
+            orientation: self.info.orientation,
         }
     }
 

@@ -1,4 +1,5 @@
 use crate::world::client::Client;
+use crate::world::creature::Creature;
 use wow_items::vanilla::lookup_item;
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::shared::Guid;
@@ -21,6 +22,7 @@ impl GmCommand {
         message: &str,
         client: &Client,
         clients: &[Client],
+        creatures: &[Creature],
     ) -> Result<Self, String> {
         Ok(if message == "north" {
             let mut p = client.position();
@@ -78,6 +80,11 @@ impl GmCommand {
                             .find(|a| a.character().guid == client.character().target)
                         {
                             Self::Teleport(c.position())
+                        } else if let Some(c) = creatures
+                            .iter()
+                            .find(|a| a.guid == client.character().target)
+                        {
+                            Self::Teleport(c.position())
                         } else {
                             return Err(format!(
                                 "Unable to find target '{}'",
@@ -92,6 +99,8 @@ impl GmCommand {
                 }
                 [name] => {
                     if let Some(c) = clients.iter().find(|a| &a.character().name == name) {
+                        Self::Teleport(c.position())
+                    } else if let Some(c) = creatures.iter().find(|a| &a.name == name) {
                         Self::Teleport(c.position())
                     } else {
                         return Err(format!("Unable to find player '{}'", name));
@@ -160,26 +169,38 @@ impl GmCommand {
                 return Err("Unable to find range: No target".to_string());
             }
 
-            let Some(target) = clients.iter().find(|a| a.character().guid == target) else {
-                return Err(format!(
-                    "Unable to find range: Unable to find target '{}'",
-                    target
-                ));
-            };
-
             if c.target == c.guid {
                 return Err("Unable to find range: You are targeting yourself".to_string());
             }
 
-            if let Some(distance) = client.distance_to_center(target) {
+            let (position, name, guid, map) =
+                if let Some(target) = clients.iter().find(|a| a.character().guid == target) {
+                    (
+                        target.position(),
+                        target.character().name.as_str(),
+                        target.character().guid,
+                        target.character().map,
+                    )
+                } else if let Some(target) = creatures.iter().find(|a| a.guid == target) {
+                    (
+                        target.position(),
+                        target.name.as_str(),
+                        target.guid,
+                        target.map,
+                    )
+                } else {
+                    return Err(format!(
+                        "Unable to find range: Unable to find target '{}'",
+                        target
+                    ));
+                };
+
+            if let Some(distance) = client.distance_to_position(&position) {
                 Self::RangeToTarget(distance)
             } else {
                 return Err(format!(
                     "Unable to find range: Target '{}' ({}) is on map '{}' while you are on '{}'",
-                    target.character().name,
-                    target.character().guid,
-                    target.character().map,
-                    c.map
+                    name, guid, map, c.map
                 ));
             }
         } else if let Some(distance) = message.strip_prefix("extend") {

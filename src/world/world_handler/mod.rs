@@ -39,12 +39,12 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(rx: Receiver<CharacterScreenClient>) -> Self {
+    pub fn new(rx: Receiver<CharacterScreenClient>, db: &mut WorldDatabase) -> Self {
         Self {
             clients: vec![],
             clients_on_character_screen: vec![],
             clients_waiting_to_join: rx,
-            creatures: vec![Creature::new("Thing")],
+            creatures: vec![Creature::new("Thing", db.new_guid().into())],
         }
     }
 

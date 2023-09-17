@@ -19,12 +19,12 @@ pub struct Creature {
 }
 
 impl Creature {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>, guid: Guid) -> Self {
         let p = position(PositionIdentifier::HumanStartZone);
 
         Self {
             name: name.into(),
-            guid: Guid::new(100),
+            guid,
             info: MovementInfo {
                 flags: Default::default(),
                 timestamp: 0,

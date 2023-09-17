@@ -29,9 +29,8 @@ use wow_world_messages::vanilla::*;
 pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
     let listener = TcpListener::bind("0.0.0.0:8085").await.unwrap();
     let (tx, rx) = mpsc::channel(32);
-    let world = World::new(rx);
 
-    tokio::spawn(run_world(world));
+    tokio::spawn(run_world(rx));
 
     loop {
         let (stream, _) = listener.accept().await.unwrap();
@@ -42,8 +41,9 @@ pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
 
 pub const DESIRED_TIMESTEP: f32 = 1.0 / 10.0;
 
-async fn run_world(mut world: World) {
+async fn run_world(rx: mpsc::Receiver<CharacterScreenClient>) {
     let mut db = WorldDatabase::new();
+    let mut world = World::new(rx, &mut db);
 
     loop {
         let before = Instant::now();

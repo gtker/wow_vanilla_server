@@ -184,7 +184,7 @@ pub async fn gm_command(
                                 },
                             },
                         },
-                        guid: 100_u64.into(),
+                        guid: creatures[0].guid,
                     }],
                 })
                 .await;

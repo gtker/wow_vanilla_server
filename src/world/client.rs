@@ -96,14 +96,6 @@ impl Client {
         .await;
     }
 
-    pub fn coordinates(&self) -> (f32, f32, f32) {
-        (
-            self.character().info.position.x,
-            self.character().info.position.y,
-            self.character().info.position.z,
-        )
-    }
-
     pub fn position(&self) -> Position {
         Position::new(
             self.character().map,

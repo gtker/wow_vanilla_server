@@ -4,7 +4,7 @@ use crate::world::database::WorldDatabase;
 use crate::world::world;
 use crate::world::world::client::Client;
 use crate::world::world::pathfinding_maps::PathfindingMaps;
-use crate::world::world_opcode_handler::creature::Creature;
+use crate::world::world_opcode_handler::entities::{Entities, Entity};
 use crate::world::world_opcode_handler::gm_command::parser::GmCommand;
 use crate::world::world_opcode_handler::item::{award_item, Item};
 use wow_world_base::vanilla::position::Position;
@@ -14,15 +14,14 @@ use wow_world_messages::vanilla::{
     SMSG_COMPRESSED_MOVES, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_SPLINE_SET_RUN_SPEED,
 };
 
-pub async fn gm_command(
+pub(crate) async fn gm_command(
     client: &mut Client,
-    clients: &mut [Client],
-    creatures: &mut [Creature],
+    entities: &mut Entities<'_>,
     message: &str,
     mut db: &mut WorldDatabase,
     maps: &mut PathfindingMaps,
 ) {
-    let command = match GmCommand::from_player_command(message, client, clients, creatures) {
+    let command = match GmCommand::from_player_command(message, client, entities) {
         Ok(e) => e,
         Err(e) => {
             client.send_system_message(e).await;
@@ -56,7 +55,7 @@ pub async fn gm_command(
                 })
                 .await;
 
-            for c in clients {
+            for c in entities.clients() {
                 c.send_message(SMSG_SPLINE_SET_RUN_SPEED {
                     guid: client.character().guid,
                     speed,
@@ -112,7 +111,7 @@ pub async fn gm_command(
 
             let item = Item::new(item, client.character().guid, AMOUNT, &mut db);
 
-            award_item(item, client, clients).await;
+            award_item(item, client, entities.clients()).await;
         }
         GmCommand::MoveNpc => {
             client
@@ -137,31 +136,36 @@ pub async fn gm_command(
                                 },
                             },
                         },
-                        guid: creatures[0].guid,
+                        guid: entities.creatures()[0].guid,
                     }],
                 })
                 .await;
         }
         GmCommand::Information(target) => {
-            let info = if let Some(target) = clients.iter().find(|a| a.character().guid == target) {
-                let name = target.character().name.as_str();
-                let guid = target.character().guid;
-                let race = target.character().race_class;
-                let gender = target.character().gender;
-                let level = target.character().level;
+            let info = if let Some(target) = entities.find_guid(target) {
+                match target {
+                    Entity::Player(c) => {
+                        let name = c.character().name.as_str();
+                        let guid = c.character().guid;
+                        let race = c.character().race_class;
+                        let gender = c.character().gender;
+                        let level = c.character().level;
 
-                let map = target.character().map;
-                let Position { x, y, z, .. } = target.position();
+                        let map = c.character().map;
+                        let Position { x, y, z, .. } = c.position();
 
-                format!("Player '{name}' ({guid})\nLevel {level} {gender} {race}\n{map} x: {x}, y: {y}, z: {z}")
-            } else if let Some(target) = creatures.iter().find(|a| a.guid == target) {
-                let name = target.name.as_str();
-                let guid = target.guid;
+                        format!("Player '{name}' ({guid})\nLevel {level} {gender} {race}\n{map} x: {x}, y: {y}, z: {z}")
+                    }
+                    Entity::Creature(c) => {
+                        let name = c.name.as_str();
+                        let guid = c.guid;
 
-                let map = target.map;
-                let Position { x, y, z, .. } = target.position();
+                        let map = c.map;
+                        let Position { x, y, z, .. } = c.position();
 
-                format!("Creature '{name}' ({guid})\n{map} x: {x}, y: {y}, z: {z} (Client movement not supported)")
+                        format!("Creature '{name}' ({guid})\n{map} x: {x}, y: {y}, z: {z} (Client movement not supported)")
+                    }
+                }
             } else {
                 client
                     .send_system_message(format!("Unable to find target '{target}'"))
@@ -173,11 +177,11 @@ pub async fn gm_command(
         }
         GmCommand::ShouldNotHaveLineOfSight(target) | GmCommand::ShouldHaveLineOfSight(target) => {
             let pos = client.position();
-            let o = if let Some(other) = clients.iter().find(|a| a.character().guid == target) {
+            let o = if let Some(other) = entities.find_player(target) {
                 other
             } else {
                 client
-                    .send_system_message(format!("Unable to find target '{target}'"))
+                    .send_system_message(format!("Unable to find player '{target}'"))
                     .await;
                 return;
             };

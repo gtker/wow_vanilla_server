@@ -2,8 +2,8 @@ use crate::file_utils::append_string_to_file;
 use crate::world::database::WorldDatabase;
 use crate::world::world::client::Client;
 use crate::world::world::pathfinding_maps::PathfindingMaps;
+use crate::world::world_opcode_handler::entities::Entities;
 use crate::world::world_opcode_handler::opcode_handler::handle_opcodes;
-use creature::Creature;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -13,30 +13,21 @@ use wow_world_messages::vanilla::ServerMessage;
 pub mod character;
 pub mod chat;
 pub mod creature;
+pub(crate) mod entities;
 pub(crate) mod gm_command;
 pub mod inventory;
 pub(crate) mod item;
 mod opcode_handler;
 
-pub async fn handle_received_client_opcodes(
+pub(crate) async fn handle_received_client_opcodes(
     client: &mut Client,
-    clients: &mut [Client],
-    creatures: &mut [Creature],
+    entities: &mut Entities<'_>,
     db: &mut WorldDatabase,
     move_to_character_screen: &mut bool,
     maps: &mut PathfindingMaps,
 ) {
     while let Ok(opcode) = client.received_messages().try_recv() {
-        handle_opcodes(
-            client,
-            clients,
-            creatures,
-            db,
-            move_to_character_screen,
-            opcode,
-            maps,
-        )
-        .await;
+        handle_opcodes(client, entities, db, move_to_character_screen, opcode, maps).await;
     }
 }
 

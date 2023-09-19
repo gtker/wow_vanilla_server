@@ -3,7 +3,7 @@ use crate::world::world::client::Client;
 use crate::world::world::pathfinding_maps::PathfindingMaps;
 use crate::world::world::{announce_character_login, get_client_login_messages, prepare_teleport};
 use crate::world::world_opcode_handler::chat::handle_message;
-use crate::world::world_opcode_handler::creature::Creature;
+use crate::world::world_opcode_handler::entities::Entities;
 use crate::world::world_opcode_handler::{
     gm_command, send_movement_to_clients, send_to_all, write_client_test,
 };
@@ -32,8 +32,7 @@ use wow_world_messages::vanilla::{
 
 pub(super) async fn handle_opcodes(
     client: &mut Client,
-    clients: &mut [Client],
-    creatures: &mut [Creature],
+    entities: &mut Entities<'_>,
     db: &mut WorldDatabase,
     move_to_character_screen: &mut bool,
     opcode: ClientOpcodeMessage,
@@ -125,7 +124,7 @@ pub(super) async fn handle_opcodes(
                 .await;
         }
         ClientOpcodeMessage::CMSG_CREATURE_QUERY(c) => {
-            if let Some(creature) = creatures.iter().find(|a| a.entry == c.creature) {
+            if let Some(creature) = entities.find_creature(c.guid) {
                 client
                     .send_message(SMSG_CREATURE_QUERY_RESPONSE {
                         creature_entry: c.creature,
@@ -179,15 +178,15 @@ pub(super) async fn handle_opcodes(
                 client.send_opcode(&m).await;
             }
 
-            for c in &mut *clients {
+            for c in entities.clients() {
                 announce_character_login(client, c.character()).await;
             }
 
-            for c in &mut *clients {
+            for c in entities.clients() {
                 announce_character_login(c, client.character()).await;
             }
 
-            for creature in &mut *creatures {
+            for creature in entities.creatures() {
                 client.send_message(creature.to_message()).await;
             }
         }
@@ -195,8 +194,7 @@ pub(super) async fn handle_opcodes(
             if c.message.starts_with('.') {
                 gm_command::gm_command(
                     client,
-                    clients,
-                    creatures,
+                    entities,
                     c.message.trim_start_matches('.'),
                     db,
                     maps,
@@ -206,7 +204,7 @@ pub(super) async fn handle_opcodes(
                 return;
             }
 
-            handle_message(client, clients, c).await;
+            handle_message(client, entities.clients(), c).await;
         }
         ClientOpcodeMessage::CMSG_LOGOUT_REQUEST => {
             client
@@ -239,7 +237,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_FORWARD_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -247,20 +245,23 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_BACKWARD_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
         ClientOpcodeMessage::MSG_MOVE_STOP(c) => {
             client.set_movement_info(c.info.clone());
-            send_movement_to_clients(MSG_MOVE_STOP_Server { guid, info: c.info }.into(), clients)
-                .await
+            send_movement_to_clients(
+                MSG_MOVE_STOP_Server { guid, info: c.info }.into(),
+                entities.clients(),
+            )
+            .await
         }
         ClientOpcodeMessage::MSG_MOVE_START_STRAFE_LEFT(c) => {
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_STRAFE_LEFT_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -268,7 +269,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_STRAFE_RIGHT_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -276,20 +277,23 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_STOP_STRAFE_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
         ClientOpcodeMessage::MSG_MOVE_JUMP(c) => {
             client.set_movement_info(c.info.clone());
-            send_movement_to_clients(MSG_MOVE_JUMP_Server { guid, info: c.info }.into(), clients)
-                .await
+            send_movement_to_clients(
+                MSG_MOVE_JUMP_Server { guid, info: c.info }.into(),
+                entities.clients(),
+            )
+            .await
         }
         ClientOpcodeMessage::MSG_MOVE_START_TURN_LEFT(c) => {
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_TURN_LEFT_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -297,7 +301,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_TURN_RIGHT_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -305,7 +309,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_STOP_TURN_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -313,7 +317,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_PITCH_UP_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -321,7 +325,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_PITCH_DOWN_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -329,7 +333,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_STOP_PITCH_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -337,7 +341,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_SET_RUN_MODE_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -345,7 +349,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_SET_WALK_MODE_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -353,7 +357,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_FALL_LAND_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -361,7 +365,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_START_SWIM_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -369,7 +373,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_STOP_SWIM_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -377,7 +381,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_SET_FACING_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -385,7 +389,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_SET_PITCH_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -393,7 +397,7 @@ pub(super) async fn handle_opcodes(
             client.set_movement_info(c.info.clone());
             send_movement_to_clients(
                 MSG_MOVE_HEARTBEAT_Server { guid, info: c.info }.into(),
-                clients,
+                entities.clients(),
             )
             .await
         }
@@ -422,7 +426,7 @@ pub(super) async fn handle_opcodes(
                     victim: client.character().target,
                 },
                 client,
-                clients,
+                entities.clients(),
             )
             .await;
 
@@ -445,7 +449,7 @@ pub(super) async fn handle_opcodes(
                     blocked_amount: 0,
                 },
                 client,
-                clients,
+                entities.clients(),
             )
             .await;
         }
@@ -459,7 +463,7 @@ pub(super) async fn handle_opcodes(
                     unknown1: 0,
                 },
                 client,
-                clients,
+                entities.clients(),
             )
             .await;
         }
@@ -515,7 +519,7 @@ pub(super) async fn handle_opcodes(
                     }],
                 },
                 client,
-                clients,
+                entities.clients(),
             )
             .await;
         }
@@ -530,7 +534,7 @@ pub(super) async fn handle_opcodes(
                     guid,
                 },
                 client,
-                clients,
+                entities.clients(),
             )
             .await;
 
@@ -542,7 +546,7 @@ pub(super) async fn handle_opcodes(
                     name: "".to_string(),
                 },
                 client,
-                clients,
+                entities.clients(),
             )
             .await;
         }

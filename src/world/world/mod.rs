@@ -5,6 +5,7 @@ use crate::world::world::pathfinding_maps::PathfindingMaps;
 use crate::world::world_opcode_handler;
 use crate::world::world_opcode_handler::character::Character;
 use crate::world::world_opcode_handler::creature::Creature;
+use crate::world::world_opcode_handler::entities::Entities;
 use client::character_screen_client::{CharacterScreenClient, CharacterScreenProgress};
 use std::collections::BTreeSet;
 use std::convert::TryInto;
@@ -100,10 +101,10 @@ impl World {
 
         for i in 0..self.clients.len() {
             let mut client = self.clients.remove(i);
+            let mut entities = Entities::new(&mut self.clients, &mut self.creatures);
             world_opcode_handler::handle_received_client_opcodes(
                 &mut client,
-                &mut self.clients,
-                &mut self.creatures,
+                &mut entities,
                 db,
                 &mut move_to_character_screen,
                 &mut self.maps,

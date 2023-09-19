@@ -1,5 +1,5 @@
 use crate::world::world::client::Client;
-use crate::world::world_opcode_handler::creature::Creature;
+use crate::world::world_opcode_handler::entities::{Entities, Entity};
 use wow_items::vanilla::{lookup_item, lookup_item_by_name};
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::shared::Guid;
@@ -23,8 +23,7 @@ impl GmCommand {
     pub(crate) fn from_player_command(
         message: &str,
         client: &Client,
-        clients: &[Client],
-        creatures: &[Creature],
+        entities: &mut Entities,
     ) -> Result<Self, String> {
         Ok(if message == "north" {
             let mut p = client.position();
@@ -77,16 +76,8 @@ impl GmCommand {
             match coordinates.as_slice() {
                 [] => {
                     if !client.character().target.is_zero() {
-                        if let Some(c) = clients
-                            .iter()
-                            .find(|a| a.character().guid == client.character().target)
-                        {
-                            Self::Teleport(c.position())
-                        } else if let Some(c) = creatures
-                            .iter()
-                            .find(|a| a.guid == client.character().target)
-                        {
-                            Self::Teleport(c.position())
+                        if let Some(c) = entities.find_position(client.character().target) {
+                            Self::Teleport(c)
                         } else {
                             return Err(format!(
                                 "Unable to find target '{}'",
@@ -101,18 +92,10 @@ impl GmCommand {
                 }
                 [name] => {
                     let name = name.to_lowercase();
-
-                    if let Some(c) = clients
-                        .iter()
-                        .find(|a| &a.character().name.to_lowercase() == &name)
-                    {
-                        Self::Teleport(c.position())
-                    } else if let Some(c) =
-                        creatures.iter().find(|a| &a.name.to_lowercase() == &name)
-                    {
-                        Self::Teleport(c.position())
+                    if let Some(c) = entities.find_position(client.character().target) {
+                        Self::Teleport(c)
                     } else {
-                        return Err(format!("Unable to find player '{}'", name));
+                        return Err(format!("Unable to find '{}'", name));
                     }
                 }
                 [_, _] => return Err("Can not teleport with only x and y coordinates".to_string()),
@@ -182,34 +165,24 @@ impl GmCommand {
                 return Err("Unable to find range: You are targeting yourself".to_string());
             }
 
-            let (position, name, guid, map) =
-                if let Some(target) = clients.iter().find(|a| a.character().guid == target) {
-                    (
-                        target.position(),
-                        target.character().name.as_str(),
-                        target.character().guid,
-                        target.character().map,
-                    )
-                } else if let Some(target) = creatures.iter().find(|a| a.guid == target) {
-                    (
-                        target.position(),
-                        target.name.as_str(),
-                        target.guid,
-                        target.map,
-                    )
-                } else {
-                    return Err(format!(
-                        "Unable to find range: Unable to find target '{}'",
-                        target
-                    ));
-                };
+            let (position, name) = if let Some(target) = entities.find_guid(target) {
+                match target {
+                    Entity::Player(c) => (c.position(), c.character().name.as_str()),
+                    Entity::Creature(c) => (c.position(), c.name.as_str()),
+                }
+            } else {
+                return Err(format!(
+                    "Unable to find range: Unable to find target '{}'",
+                    target
+                ));
+            };
 
             if let Some(distance) = client.distance_to_position(&position) {
                 Self::RangeToTarget(distance)
             } else {
                 return Err(format!(
-                    "Unable to find range: Target '{}' ({}) is on map '{}' while you are on '{}'",
-                    name, guid, map, c.map
+                    "Unable to find range: Target '{name}' ({target}) is on map '{}' while you are on '{}'",
+                    position.map, c.map
                 ));
             }
         } else if let Some(distance) = message.strip_prefix("extend") {

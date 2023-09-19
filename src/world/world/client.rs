@@ -27,8 +27,6 @@ pub enum CharacterScreenProgress {
 pub struct Client {
     character: Character,
     pub in_process_of_teleport: bool,
-    pub location_index: usize,
-    pub status: CharacterScreenProgress,
     received_messages: Receiver<ClientOpcodeMessage>,
     write: OwnedWriteHalf,
     encrypter: EncrypterHalf,
@@ -39,9 +37,7 @@ pub struct Client {
 impl Client {
     pub(crate) fn into_character_screen_client(self) -> CharacterScreenClient {
         CharacterScreenClient {
-            in_process_of_teleport: self.in_process_of_teleport,
-            location_index: self.location_index,
-            status: self.status,
+            status: CharacterScreenProgress::CharacterScreen,
             received_messages: self.received_messages,
             write: self.write,
             encrypter: self.encrypter,
@@ -134,8 +130,6 @@ impl Client {
 
 #[derive(Debug)]
 pub struct CharacterScreenClient {
-    pub in_process_of_teleport: bool,
-    pub location_index: usize,
     pub status: CharacterScreenProgress,
     received_messages: Receiver<ClientOpcodeMessage>,
     write: OwnedWriteHalf,
@@ -148,9 +142,7 @@ impl CharacterScreenClient {
     pub fn into_client(self, character: Character) -> Client {
         Client {
             character,
-            in_process_of_teleport: self.in_process_of_teleport,
-            location_index: self.location_index,
-            status: self.status,
+            in_process_of_teleport: false,
             received_messages: self.received_messages,
             write: self.write,
             encrypter: self.encrypter,
@@ -196,8 +188,6 @@ impl CharacterScreenClient {
         });
 
         Self {
-            in_process_of_teleport: false,
-            location_index: 0,
             status: CharacterScreenProgress::CharacterScreen,
             received_messages: client_recv,
             write,

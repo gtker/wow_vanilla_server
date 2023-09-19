@@ -1,5 +1,5 @@
 use crate::world::database::WorldDatabase;
-use crate::world::world::client::{CharacterScreenProgress, Client};
+use crate::world::world::client::Client;
 use crate::world::world::{announce_character_login, get_client_login_messages, prepare_teleport};
 use crate::world::world_opcode_handler::chat::handle_message;
 use crate::world::world_opcode_handler::creature::Creature;
@@ -214,7 +214,6 @@ pub(super) async fn handle_opcodes(
                 .await;
 
             *move_to_character_screen = true;
-            client.status = CharacterScreenProgress::CharacterScreen;
 
             db.replace_character_data(client.character().clone());
 

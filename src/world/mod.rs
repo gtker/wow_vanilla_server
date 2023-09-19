@@ -21,22 +21,22 @@ use wow_world_messages::vanilla::*;
 
 pub async fn world(users: Arc<Mutex<HashMap<String, SrpServer>>>) {
     let listener = TcpListener::bind("0.0.0.0:8085").await.unwrap();
-    let (tx, rx) = mpsc::channel(32);
+    let (world, clients_waiting_to_join) = mpsc::channel(32);
 
-    tokio::spawn(run_world(rx));
+    tokio::spawn(run_world(clients_waiting_to_join));
 
     loop {
         let (stream, _) = listener.accept().await.unwrap();
 
-        tokio::spawn(character_screen(stream, users.clone(), tx.clone()));
+        tokio::spawn(character_screen(stream, users.clone(), world.clone()));
     }
 }
 
 pub const DESIRED_TIMESTEP: f32 = 1.0 / 10.0;
 
-async fn run_world(rx: mpsc::Receiver<CharacterScreenClient>) {
+async fn run_world(clients_waiting_to_join: mpsc::Receiver<CharacterScreenClient>) {
     let mut db = WorldDatabase::new();
-    let mut world = World::new(rx, &mut db);
+    let mut world = World::new(clients_waiting_to_join, &mut db);
 
     loop {
         let before = Instant::now();

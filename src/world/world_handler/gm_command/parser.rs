@@ -98,9 +98,16 @@ impl GmCommand {
                     }
                 }
                 [name] => {
-                    if let Some(c) = clients.iter().find(|a| &a.character().name == name) {
+                    let name = name.to_lowercase();
+
+                    if let Some(c) = clients
+                        .iter()
+                        .find(|a| &a.character().name.to_lowercase() == &name)
+                    {
                         Self::Teleport(c.position())
-                    } else if let Some(c) = creatures.iter().find(|a| &a.name == name) {
+                    } else if let Some(c) =
+                        creatures.iter().find(|a| &a.name.to_lowercase() == &name)
+                    {
                         Self::Teleport(c.position())
                     } else {
                         return Err(format!("Unable to find player '{}'", name));

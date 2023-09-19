@@ -1,5 +1,5 @@
 use crate::world::database::WorldDatabase;
-use crate::world::item::Item;
+use crate::world::world_opcode_handler::item::Item;
 use wow_items::vanilla::lookup_item;
 use wow_world_base::vanilla::{Guid, ItemSlot, StarterItem};
 use wow_world_messages::vanilla::CharacterGear;

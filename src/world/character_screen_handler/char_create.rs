@@ -1,5 +1,5 @@
-use crate::world::character::Character;
 use crate::world::database::WorldDatabase;
+use crate::world::world_opcode_handler::character::Character;
 use wow_world_base::vanilla::{PlayerGender, RaceClass};
 use wow_world_messages::vanilla::CMSG_CHAR_CREATE;
 

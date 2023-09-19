@@ -1,10 +1,10 @@
 use crate::file_utils::append_string_to_file;
-use crate::world::chat::handle_message;
-use crate::world::client::{CharacterScreenProgress, Client};
-use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
-use crate::world::world_handler;
-use crate::world::world_handler::{announce_character_login, gm_command};
+use crate::world::world;
+use crate::world::world::announce_character_login;
+use crate::world::world::client::{CharacterScreenProgress, Client};
+use chat::handle_message;
+use creature::Creature;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -30,6 +30,13 @@ use wow_world_messages::vanilla::{
     SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG,
     SMSG_QUERY_TIME_RESPONSE, SMSG_TEXT_EMOTE, SMSG_UPDATE_OBJECT,
 };
+
+pub mod character;
+pub mod chat;
+pub mod creature;
+pub(crate) mod gm_command;
+pub mod inventory;
+pub(crate) mod item;
 
 pub async fn handle_received_client_opcodes(
     client: &mut Client,
@@ -84,7 +91,7 @@ pub async fn handle_received_client_opcodes(
                                 }
                                 Trigger::Teleport { location, .. } => {
                                     client.send_system_message("    Inside teleport").await;
-                                    world_handler::prepare_teleport(*location, client).await
+                                    world::prepare_teleport(*location, client).await
                                 }
                             }
                         }
@@ -163,12 +170,12 @@ pub async fn handle_received_client_opcodes(
                     c.position.z,
                     c.orientation,
                 );
-                world_handler::prepare_teleport(p, client).await;
+                world::prepare_teleport(p, client).await;
             }
             ClientOpcodeMessage::CMSG_TELEPORT_TO_UNIT(c) => {
                 let p = position_from_str(&c.name);
                 if let Some(p) = p {
-                    world_handler::prepare_teleport(p, client).await;
+                    world::prepare_teleport(p, client).await;
                 } else {
                     client
                         .send_system_message(format!("Location not found: '{}'", c.name))
@@ -181,7 +188,7 @@ pub async fn handle_received_client_opcodes(
                 }
                 client.in_process_of_teleport = false;
 
-                for m in world_handler::get_client_login_messages(client.character()) {
+                for m in world::get_client_login_messages(client.character()) {
                     client.send_opcode(&m).await;
                 }
 

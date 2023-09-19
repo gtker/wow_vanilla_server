@@ -1,5 +1,5 @@
-use crate::world::client::Client;
-use crate::world::creature::Creature;
+use crate::world::world::client::Client;
+use crate::world::world_opcode_handler::creature::Creature;
 use wow_items::vanilla::{lookup_item, lookup_item_by_name};
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::shared::Guid;

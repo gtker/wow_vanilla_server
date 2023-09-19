@@ -1,11 +1,9 @@
-pub(crate) mod gm_command;
-
-use crate::world::character::Character;
 use crate::world::character_screen_handler::handle_character_screen_opcodes;
-use crate::world::client::{CharacterScreenClient, CharacterScreenProgress, Client};
-use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
+use crate::world::world::client::{CharacterScreenClient, CharacterScreenProgress, Client};
 use crate::world::world_opcode_handler;
+use crate::world::world_opcode_handler::character::Character;
+use crate::world::world_opcode_handler::creature::Creature;
 use std::collections::BTreeSet;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;
@@ -28,6 +26,8 @@ use wow_world_messages::vanilla::{
     SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::{DateTime, Guid};
+
+pub mod client;
 
 #[derive(Debug)]
 pub struct World {

@@ -1,4 +1,4 @@
-use crate::world::client::Client;
+use crate::world::world::client::Client;
 use wow_world_base::geometry;
 use wow_world_messages::vanilla::{
     CMSG_MESSAGECHAT_ChatType, Language, PlayerChatTag, SMSG_MESSAGECHAT_ChatType,

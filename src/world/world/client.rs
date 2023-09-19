@@ -1,4 +1,4 @@
-use crate::world::character::Character;
+use crate::world::world_opcode_handler::character::Character;
 use crate::world::world_opcode_handler::{write_server_test, write_test_case_inner};
 use tokio::io::AsyncReadExt;
 use tokio::net::tcp::OwnedWriteHalf;

@@ -1,5 +1,5 @@
 use crate::world::database::WorldDatabase;
-use crate::world::inventory::Inventory;
+use crate::world::world_opcode_handler::inventory::Inventory;
 use crate::world::DESIRED_TIMESTEP;
 use wow_world_base::movement::DEFAULT_RUNNING_SPEED;
 use wow_world_base::stats::BaseStats;

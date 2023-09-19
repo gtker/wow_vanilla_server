@@ -1,17 +1,11 @@
-mod character;
 mod character_screen_handler;
-pub mod chat;
-mod client;
-mod creature;
 mod database;
-mod inventory;
-pub(crate) mod item;
-mod world_handler;
+mod world;
 pub mod world_opcode_handler;
 
-use crate::world::client::CharacterScreenClient;
 use crate::world::database::WorldDatabase;
-use crate::world::world_handler::World;
+use crate::world::world::client::CharacterScreenClient;
+use crate::world::world::World;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};

@@ -1,5 +1,5 @@
-use crate::world::client::Client;
 use crate::world::database::WorldDatabase;
+use crate::world::world::client::Client;
 use wow_world_base::vanilla::{
     BagFamily, NewItemChatAlert, NewItemCreationType, NewItemSource, ObjectType,
 };

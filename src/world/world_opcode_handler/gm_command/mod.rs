@@ -1,11 +1,11 @@
 mod parser;
 
-use crate::world::client::Client;
-use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
-use crate::world::item::{award_item, Item};
-use crate::world::world_handler;
-use crate::world::world_handler::gm_command::parser::GmCommand;
+use crate::world::world;
+use crate::world::world::client::Client;
+use crate::world::world_opcode_handler::creature::Creature;
+use crate::world::world_opcode_handler::gm_command::parser::GmCommand;
+use crate::world::world_opcode_handler::item::{award_item, Item};
 use wow_world_base::vanilla::position::Position;
 use wow_world_base::vanilla::{SplineFlag, Vector3d};
 use wow_world_messages::vanilla::{
@@ -42,7 +42,7 @@ pub async fn gm_command(
                 .await;
         }
         GmCommand::Teleport(p) => {
-            world_handler::prepare_teleport(p, client).await;
+            world::prepare_teleport(p, client).await;
         }
         GmCommand::SetRunSpeed(speed) => {
             client.character_mut().movement_speed = speed;

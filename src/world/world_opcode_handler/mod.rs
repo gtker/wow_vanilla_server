@@ -1,6 +1,7 @@
 use crate::file_utils::append_string_to_file;
 use crate::world::database::WorldDatabase;
 use crate::world::world::client::Client;
+use crate::world::world::pathfinding_maps::PathfindingMaps;
 use crate::world::world_opcode_handler::opcode_handler::handle_opcodes;
 use creature::Creature;
 use std::fs::read_to_string;
@@ -23,6 +24,7 @@ pub async fn handle_received_client_opcodes(
     creatures: &mut [Creature],
     db: &mut WorldDatabase,
     move_to_character_screen: &mut bool,
+    maps: &mut PathfindingMaps,
 ) {
     while let Ok(opcode) = client.received_messages().try_recv() {
         handle_opcodes(
@@ -32,6 +34,7 @@ pub async fn handle_received_client_opcodes(
             db,
             move_to_character_screen,
             opcode,
+            maps,
         )
         .await;
     }

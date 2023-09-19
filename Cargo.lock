@@ -40,6 +40,9 @@ name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50d30906286121d95be3d479533b458f87493b30a4b5f79a607db8f5d11aa91f"
+dependencies = [
+ "jobserver",
+]
 
 [[package]]
 name = "cfg-if"
@@ -137,6 +140,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "jobserver"
+version = "0.1.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "936cfd212a0155903bcbc060e316fb6cc7cbf2e1907329391ebadc1fe0ce77c2"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.144"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -191,6 +203,23 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.45.0",
+]
+
+[[package]]
+name = "namigator"
+version = "0.1.0"
+source = "git+https://github.com/gtker/namigator-rs.git?rev=bf9d8d2c36b94011780b4bd3c2fa1896e70ffdb5#bf9d8d2c36b94011780b4bd3c2fa1896e70ffdb5"
+dependencies = [
+ "namigator-sys",
+ "wow_world_base",
+]
+
+[[package]]
+name = "namigator-sys"
+version = "0.1.0"
+source = "git+https://github.com/gtker/namigator-rs.git?rev=bf9d8d2c36b94011780b4bd3c2fa1896e70ffdb5#bf9d8d2c36b94011780b4bd3c2fa1896e70ffdb5"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -635,7 +664,7 @@ checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 [[package]]
 name = "wow_items"
 version = "0.1.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=8807026b9ad9d0395120d88bab8694445dad9862#8807026b9ad9d0395120d88bab8694445dad9862"
+source = "git+https://github.com/gtker/wow_messages.git?rev=e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08#e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08"
 dependencies = [
  "wow_world_base",
 ]
@@ -643,7 +672,7 @@ dependencies = [
 [[package]]
 name = "wow_login_messages"
 version = "0.3.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=8807026b9ad9d0395120d88bab8694445dad9862#8807026b9ad9d0395120d88bab8694445dad9862"
+source = "git+https://github.com/gtker/wow_messages.git?rev=e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08#e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08"
 dependencies = [
  "tokio",
 ]
@@ -663,6 +692,7 @@ dependencies = [
 name = "wow_vanilla_server"
 version = "0.0.0"
 dependencies = [
+ "namigator",
  "tokio",
  "walkdir",
  "wow_items",
@@ -675,12 +705,12 @@ dependencies = [
 [[package]]
 name = "wow_world_base"
 version = "0.1.1"
-source = "git+https://github.com/gtker/wow_messages.git?rev=8807026b9ad9d0395120d88bab8694445dad9862#8807026b9ad9d0395120d88bab8694445dad9862"
+source = "git+https://github.com/gtker/wow_messages.git?rev=e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08#e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08"
 
 [[package]]
 name = "wow_world_messages"
 version = "0.1.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=8807026b9ad9d0395120d88bab8694445dad9862#8807026b9ad9d0395120d88bab8694445dad9862"
+source = "git+https://github.com/gtker/wow_messages.git?rev=e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08#e8dc643aea0647083e5f5a1fa6d2c5e4fb274d08"
 dependencies = [
  "flate2",
  "tokio",

@@ -15,6 +15,8 @@ pub(crate) enum GmCommand {
     AddItem(&'static Item),
     MoveNpc,
     Information(Guid),
+    ShouldHaveLineOfSight(Guid),
+    ShouldNotHaveLineOfSight(Guid),
 }
 
 impl GmCommand {
@@ -249,6 +251,10 @@ impl GmCommand {
             Self::AddItem(entry)
         } else if message == "move" {
             Self::MoveNpc
+        } else if message == "los" {
+            Self::ShouldHaveLineOfSight(client.character().target)
+        } else if message == "nolos" {
+            Self::ShouldNotHaveLineOfSight(client.character().target)
         } else {
             return Err(format!("Invalid GM command: {message}"));
         })

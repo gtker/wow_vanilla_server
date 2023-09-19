@@ -3,6 +3,7 @@ mod parser;
 use crate::world::database::WorldDatabase;
 use crate::world::world;
 use crate::world::world::client::Client;
+use crate::world::world::pathfinding_maps::PathfindingMaps;
 use crate::world::world_opcode_handler::creature::Creature;
 use crate::world::world_opcode_handler::gm_command::parser::GmCommand;
 use crate::world::world_opcode_handler::item::{award_item, Item};
@@ -19,6 +20,7 @@ pub async fn gm_command(
     creatures: &mut [Creature],
     message: &str,
     mut db: &mut WorldDatabase,
+    maps: &mut PathfindingMaps,
 ) {
     let command = match GmCommand::from_player_command(message, client, clients, creatures) {
         Ok(e) => e,
@@ -168,6 +170,38 @@ pub async fn gm_command(
             };
 
             client.send_system_message(info).await;
+        }
+        GmCommand::ShouldNotHaveLineOfSight(target) | GmCommand::ShouldHaveLineOfSight(target) => {
+            let pos = client.position();
+            let o = if let Some(other) = clients.iter().find(|a| a.character().guid == target) {
+                other
+            } else {
+                client
+                    .send_system_message(format!("Unable to find target '{target}'"))
+                    .await;
+                return;
+            };
+            let other = o.position();
+
+            let f = if let Some(map) = maps.get(&pos.map) {
+                let los = map.line_of_sight(pos.into(), other.into()).unwrap();
+                if los {
+                    client
+                        .send_system_message(format!("Has line of sight to {}", o.character().name))
+                } else {
+                    client.send_system_message(format!(
+                        "Has no line of sight to {}",
+                        o.character().name
+                    ))
+                }
+            } else {
+                client.send_system_message(format!(
+                    "Unable to find map '{map}' in pathfinding maps",
+                    map = pos.map
+                ))
+            };
+
+            f.await;
         }
     }
 }

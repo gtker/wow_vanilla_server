@@ -1,6 +1,7 @@
 use crate::world::character_screen_handler::handle_character_screen_opcodes;
 use crate::world::database::WorldDatabase;
 use crate::world::world::client::Client;
+use crate::world::world::pathfinding_maps::PathfindingMaps;
 use crate::world::world_opcode_handler;
 use crate::world::world_opcode_handler::character::Character;
 use crate::world::world_opcode_handler::creature::Creature;
@@ -29,6 +30,7 @@ use wow_world_messages::vanilla::{
 use wow_world_messages::{DateTime, Guid};
 
 pub mod client;
+pub mod pathfinding_maps;
 
 #[derive(Debug)]
 pub struct World {
@@ -37,6 +39,8 @@ pub struct World {
     clients_waiting_to_join: Receiver<CharacterScreenClient>,
 
     creatures: Vec<Creature>,
+
+    maps: PathfindingMaps,
 }
 
 impl World {
@@ -44,11 +48,14 @@ impl World {
         clients_waiting_to_join: Receiver<CharacterScreenClient>,
         db: &mut WorldDatabase,
     ) -> Self {
+        let maps = PathfindingMaps::new();
+
         Self {
             clients: vec![],
             clients_on_character_screen: vec![],
             clients_waiting_to_join,
             creatures: vec![Creature::new("Thing", db.new_guid().into())],
+            maps,
         }
     }
 
@@ -99,6 +106,7 @@ impl World {
                 &mut self.creatures,
                 db,
                 &mut move_to_character_screen,
+                &mut self.maps,
             )
             .await;
             client.character_mut().update_auto_attack_timer();

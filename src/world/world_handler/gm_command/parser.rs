@@ -1,6 +1,6 @@
 use crate::world::client::Client;
 use crate::world::creature::Creature;
-use wow_items::vanilla::lookup_item;
+use wow_items::vanilla::{lookup_item, lookup_item_by_name};
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::shared::Guid;
 use wow_world_base::vanilla::position::{position_from_str, Position};
@@ -228,12 +228,15 @@ impl GmCommand {
 
             Self::Teleport(p)
         } else if let Some(entry) = message.strip_prefix("additem") {
-            let Ok(entry) = entry.trim().parse::<u32>() else {
+            let entry = if let Ok(entry) = entry.trim().parse::<u32>() {
+                let Some(item) = lookup_item(entry) else {
+                    return Err(format!("Unable to additem: No item with id '{entry}'"));
+                };
+                item
+            } else if let Some(item) = lookup_item_by_name(entry.trim()) {
+                item
+            } else {
                 return Err(format!("Unable to additem: '{entry}' is not a valid entry"));
-            };
-
-            let Some(entry) = lookup_item(entry) else {
-                return Err(format!("Unable to additem: No item with id '{entry}'"));
             };
 
             Self::AddItem(entry)

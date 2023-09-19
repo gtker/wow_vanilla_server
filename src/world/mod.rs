@@ -4,7 +4,6 @@ mod world;
 pub mod world_opcode_handler;
 
 use crate::world::database::WorldDatabase;
-use crate::world::world::client::CharacterScreenClient;
 use crate::world::world::World;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -13,6 +12,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Sender;
 use tokio::time::sleep;
+use world::client::character_screen_client::CharacterScreenClient;
 use wow_srp::normalized_string::NormalizedString;
 use wow_srp::server::SrpServer;
 use wow_srp::vanilla_header::ProofSeed;

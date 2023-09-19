@@ -1,9 +1,10 @@
 use crate::world::character_screen_handler::handle_character_screen_opcodes;
 use crate::world::database::WorldDatabase;
-use crate::world::world::client::{CharacterScreenClient, CharacterScreenProgress, Client};
+use crate::world::world::client::Client;
 use crate::world::world_opcode_handler;
 use crate::world::world_opcode_handler::character::Character;
 use crate::world::world_opcode_handler::creature::Creature;
+use client::character_screen_client::{CharacterScreenClient, CharacterScreenProgress};
 use std::collections::BTreeSet;
 use std::convert::TryInto;
 use tokio::sync::mpsc::Receiver;

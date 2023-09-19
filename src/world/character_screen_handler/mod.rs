@@ -1,5 +1,7 @@
 use crate::world::database::WorldDatabase;
-use crate::world::world::client::{CharacterScreenClient, CharacterScreenProgress};
+use crate::world::world::client::character_screen_client::{
+    CharacterScreenClient, CharacterScreenProgress,
+};
 use crate::world::world::get_client_login_messages;
 use crate::world::world_opcode_handler::write_client_test;
 use wow_world_messages::vanilla::opcodes::ClientOpcodeMessage;

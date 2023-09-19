@@ -3,17 +3,13 @@ mod parser;
 use crate::world::client::Client;
 use crate::world::creature::Creature;
 use crate::world::database::WorldDatabase;
-use crate::world::item::Item;
+use crate::world::item::{award_item, Item};
 use crate::world::world_handler;
 use crate::world::world_handler::gm_command::parser::GmCommand;
-use wow_world_base::vanilla::{
-    NewItemChatAlert, NewItemCreationType, NewItemSource, SplineFlag, Vector3d,
-};
+use wow_world_base::vanilla::{SplineFlag, Vector3d};
 use wow_world_messages::vanilla::{
     CompressedMove, CompressedMove_CompressedMoveOpcode, MonsterMove, MonsterMove_MonsterMoveType,
-    Object, Object_UpdateType, UpdatePlayerBuilder, SMSG_COMPRESSED_MOVES,
-    SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_ITEM_PUSH_RESULT, SMSG_SPLINE_SET_RUN_SPEED,
-    SMSG_UPDATE_OBJECT,
+    SMSG_COMPRESSED_MOVES, SMSG_FORCE_RUN_SPEED_CHANGE, SMSG_SPLINE_SET_RUN_SPEED,
 };
 
 pub async fn gm_command(
@@ -113,55 +109,7 @@ pub async fn gm_command(
 
             let item = Item::new(item, client.character().guid, AMOUNT, &mut db);
 
-            let item_slot = client
-                .character_mut()
-                .inventory
-                .insert_into_first_slot(item);
-            let Some(item_slot) = item_slot else {
-                client
-                    .send_system_message("Unable to add item. No free slots available.")
-                    .await;
-                return;
-            };
-
-            client
-                .send_opcode(
-                    &SMSG_UPDATE_OBJECT {
-                        has_transport: 0,
-                        objects: vec![
-                            item.to_create_item_object(client.character().guid),
-                            Object {
-                                update_type: Object_UpdateType::Values {
-                                    guid1: client.character().guid,
-                                    mask1: UpdatePlayerBuilder::new()
-                                        .set_player_field_inv(item_slot, item.guid)
-                                        .finalize()
-                                        .into(),
-                                },
-                            },
-                        ],
-                    }
-                    .into(),
-                )
-                .await;
-
-            client
-                .send_opcode(
-                    &SMSG_ITEM_PUSH_RESULT {
-                        guid: client.character().guid,
-                        source: NewItemSource::Looted,
-                        creation_type: NewItemCreationType::Created,
-                        alert_chat: NewItemChatAlert::Show,
-                        bag_slot: 0xff,
-                        item_slot: item_slot.as_int() as u32,
-                        item: item.item.entry(),
-                        item_suffix_factor: 0,
-                        item_random_property_id: 0,
-                        item_count: AMOUNT as u32,
-                    }
-                    .into(),
-                )
-                .await;
+            award_item(item, client, clients).await;
         }
         GmCommand::MoveNpc => {
             client

@@ -1,4 +1,3 @@
-mod char_create;
 mod character;
 mod character_screen_handler;
 pub mod chat;

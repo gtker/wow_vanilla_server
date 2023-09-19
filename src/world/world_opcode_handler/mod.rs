@@ -54,14 +54,10 @@ pub async fn handle_received_client_opcodes(
 
         match opcode {
             ClientOpcodeMessage::CMSG_AREATRIGGER(c) => {
-                let pos = Position {
-                    map: client.character().map,
-                    x: client.character().info.position.x,
-                    y: client.character().info.position.y,
-                    z: client.character().info.position.z,
-                    orientation: client.character().info.orientation,
-                };
-                match wow_world_base::vanilla::trigger::verify_trigger(pos, c.trigger_id) {
+                match wow_world_base::vanilla::trigger::verify_trigger(
+                    client.position(),
+                    c.trigger_id,
+                ) {
                     wow_world_base::vanilla::trigger::TriggerResult::NotFound => {
                         client
                             .send_system_message(format!("Trigger {} not found", c.trigger_id))

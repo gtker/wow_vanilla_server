@@ -6,6 +6,7 @@ use crate::world::database::WorldDatabase;
 use crate::world::item::{award_item, Item};
 use crate::world::world_handler;
 use crate::world::world_handler::gm_command::parser::GmCommand;
+use wow_world_base::vanilla::position::Position;
 use wow_world_base::vanilla::{SplineFlag, Vector3d};
 use wow_world_messages::vanilla::{
     CompressedMove, CompressedMove_CompressedMoveOpcode, MonsterMove, MonsterMove_MonsterMoveType,
@@ -147,12 +148,18 @@ pub async fn gm_command(
                 let gender = target.character().gender;
                 let level = target.character().level;
 
-                format!("Player '{name}' ({guid})\nLevel {level} {gender} {race}")
+                let map = target.character().map;
+                let Position { x, y, z, .. } = target.position();
+
+                format!("Player '{name}' ({guid})\nLevel {level} {gender} {race}\n{map} x: {x}, y: {y}, z: {z}")
             } else if let Some(target) = creatures.iter().find(|a| a.guid == target) {
                 let name = target.name.as_str();
                 let guid = target.guid;
 
-                format!("Creature '{name}' ({guid})")
+                let map = target.map;
+                let Position { x, y, z, .. } = target.position();
+
+                format!("Creature '{name}' ({guid})\n{map} x: {x}, y: {y}, z: {z} (Client movement not supported)")
             } else {
                 client
                     .send_system_message(format!("Unable to find target '{target}'"))

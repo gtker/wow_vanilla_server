@@ -468,60 +468,8 @@ pub(super) async fn handle_opcodes(
             .await;
         }
         ClientOpcodeMessage::CMSG_SWAP_INV_ITEM(c) => {
-            client
-                .character_mut()
-                .inventory
-                .swap(c.source_slot, c.destination_slot);
-            let mut player = UpdatePlayerBuilder::new()
-                .set_player_field_inv(
-                    c.source_slot,
-                    client
-                        .character()
-                        .inventory
-                        .get(c.source_slot)
-                        .map(|a| a.guid)
-                        .unwrap_or(Guid::zero()),
-                )
-                .set_player_field_inv(
-                    c.destination_slot,
-                    client
-                        .character()
-                        .inventory
-                        .get(c.destination_slot)
-                        .map(|a| a.guid)
-                        .unwrap_or(Guid::zero()),
-                );
-
-            for (i, (item, _)) in client.character().inventory.equipment().iter().enumerate() {
-                let (item, random_property, creator) = if let Some(item) = item {
-                    (
-                        item.item.entry(),
-                        item.item.random_property() as u32,
-                        item.creator,
-                    )
-                } else {
-                    (0, 0, Guid::zero())
-                };
-                if let Ok(index) = VisibleItemIndex::try_from(i) {
-                    let visible_item = VisibleItem::new(creator, item, [0, 0], random_property, 0);
-                    player = player.set_player_visible_item(visible_item, index);
-                }
-            }
-
-            send_to_all(
-                SMSG_UPDATE_OBJECT {
-                    has_transport: 0,
-                    objects: vec![Object {
-                        update_type: Object_UpdateType::Values {
-                            guid1: guid,
-                            mask1: UpdateMask::Player(player.finalize()),
-                        },
-                    }],
-                },
-                client,
-                entities.clients(),
-            )
-            .await;
+            handle_swap_inventory_item(guid, client, entities, c.source_slot, c.destination_slot)
+                .await
         }
         ClientOpcodeMessage::CMSG_TEXT_EMOTE(v) => {
             client
@@ -554,4 +502,67 @@ pub(super) async fn handle_opcodes(
             write_client_test(&v);
         }
     }
+}
+
+async fn handle_swap_inventory_item(
+    guid: Guid,
+    client: &mut Client,
+    entities: &mut Entities<'_>,
+    source_slot: ItemSlot,
+    destination_slot: ItemSlot,
+) {
+    client
+        .character_mut()
+        .inventory
+        .swap(source_slot, destination_slot);
+    let mut player = UpdatePlayerBuilder::new()
+        .set_player_field_inv(
+            source_slot,
+            client
+                .character()
+                .inventory
+                .get(source_slot)
+                .map(|a| a.guid)
+                .unwrap_or(Guid::zero()),
+        )
+        .set_player_field_inv(
+            destination_slot,
+            client
+                .character()
+                .inventory
+                .get(destination_slot)
+                .map(|a| a.guid)
+                .unwrap_or(Guid::zero()),
+        );
+
+    for (i, (item, _)) in client.character().inventory.equipment().iter().enumerate() {
+        let (item, random_property, creator) = if let Some(item) = item {
+            (
+                item.item.entry(),
+                item.item.random_property() as u32,
+                item.creator,
+            )
+        } else {
+            (0, 0, Guid::zero())
+        };
+        if let Ok(index) = VisibleItemIndex::try_from(i) {
+            let visible_item = VisibleItem::new(creator, item, [0, 0], random_property, 0);
+            player = player.set_player_visible_item(visible_item, index);
+        }
+    }
+
+    send_to_all(
+        SMSG_UPDATE_OBJECT {
+            has_transport: 0,
+            objects: vec![Object {
+                update_type: Object_UpdateType::Values {
+                    guid1: guid,
+                    mask1: UpdateMask::Player(player.finalize()),
+                },
+            }],
+        },
+        client,
+        entities.clients(),
+    )
+    .await;
 }

@@ -1,6 +1,6 @@
 use crate::world::database::WorldDatabase;
 use crate::world::world_opcode_handler::item::Item;
-use wow_items::vanilla::lookup_item;
+use wow_items::vanilla::{lookup_item, InventoryType};
 use wow_world_base::vanilla::{Guid, ItemSlot, StarterItem};
 use wow_world_messages::vanilla::CharacterGear;
 
@@ -37,15 +37,33 @@ impl Inventory {
         *self.get_mut(destination) = source_temp;
     }
 
+    fn get_inventory_slots(&self) -> &[Option<Item>] {
+        &self.slots
+            [ItemSlot::Inventory0.as_int() as usize..=ItemSlot::Inventory15.as_int() as usize]
+    }
+
+    fn get_inventory_slots_mut(&mut self) -> &mut [Option<Item>] {
+        &mut self.slots
+            [ItemSlot::Inventory0.as_int() as usize..=ItemSlot::Inventory15.as_int() as usize]
+    }
+
+    pub fn get_first_free_slot(&self) -> Option<ItemSlot> {
+        self.get_inventory_slots()
+            .iter()
+            .position(Option::is_none)
+            .map(|i| {
+                ItemSlot::try_from((ItemSlot::Inventory0.as_int() as usize + i) as u8).unwrap()
+            })
+    }
+
     pub fn insert_into_first_slot(&mut self, item: Item) -> Option<ItemSlot> {
-        let bag_start: usize = ItemSlot::Inventory0.as_int().into();
-        let bag_end: usize = ItemSlot::Inventory15.as_int().into();
-        let slots = &mut self.slots[bag_start..=bag_end];
+        let slots = self.get_inventory_slots_mut();
 
         for (i, slot) in slots.iter_mut().enumerate() {
             if slot.is_none() {
                 *slot = Some(item);
 
+                let bag_start = ItemSlot::Inventory0.as_int() as usize;
                 let slot = bag_start + i;
                 return Some(ItemSlot::try_from(slot as u8).unwrap());
             }
@@ -123,5 +141,65 @@ impl Inventory {
 
     fn get_mut(&mut self, item_slot: ItemSlot) -> &mut Option<Item> {
         &mut self.slots[item_slot.as_int() as usize]
+    }
+
+    pub fn get_inventory_type(&self, item_slot: ItemSlot) -> Option<InventoryType> {
+        self.get(item_slot).map(|item| item.item.inventory_type())
+    }
+
+    pub fn is_free(&self, item_slot: ItemSlot) -> bool {
+        self.inner_get(item_slot).is_none()
+    }
+
+    pub fn is_occupied(&self, item_slot: ItemSlot) -> bool {
+        !self.is_free(item_slot)
+    }
+
+    pub fn is_inventory_full(&self) -> bool {
+        self.get_inventory_slots().iter().all(Option::is_some)
+    }
+
+    /// Returns a list of possible equipment slots for a given `InventoryType`.
+    ///
+    /// This is used to determine which slots an item of a specific type can be equipped to.
+    /// For example, `InventoryType::Finger` returns both ring slots, while
+    /// `InventoryType::Head` returns only the head slot.
+    pub fn get_equipment_slots(&self, inventory_type: InventoryType) -> &'static [ItemSlot] {
+        match inventory_type {
+            InventoryType::NonEquip => &[],
+            InventoryType::Head => &[ItemSlot::Head],
+            InventoryType::Neck => &[ItemSlot::Neck],
+            InventoryType::Shoulders => &[ItemSlot::Shoulders],
+            InventoryType::Body => &[ItemSlot::Shirt],
+            InventoryType::Chest => &[ItemSlot::Chest],
+            InventoryType::Waist => &[ItemSlot::Waist],
+            InventoryType::Legs => &[ItemSlot::Legs],
+            InventoryType::Feet => &[ItemSlot::Boots],
+            InventoryType::Wrists => &[ItemSlot::Wrist],
+            InventoryType::Hands => &[ItemSlot::Hands],
+            InventoryType::Finger => &[ItemSlot::Ring1, ItemSlot::Ring2],
+            InventoryType::Trinket => &[ItemSlot::Trinket1, ItemSlot::Trinket2],
+            InventoryType::Weapon => &[ItemSlot::MainHand, ItemSlot::OffHand],
+            InventoryType::Shield => &[ItemSlot::OffHand],
+            InventoryType::Ranged => &[ItemSlot::RangedOrRelic],
+            InventoryType::Cloak => &[ItemSlot::Back],
+            InventoryType::TwoHandedWeapon => &[ItemSlot::MainHand],
+            InventoryType::Bag => &[
+                ItemSlot::Bag1,
+                ItemSlot::Bag2,
+                ItemSlot::Bag3,
+                ItemSlot::Bag4,
+            ],
+            InventoryType::Tabard => &[ItemSlot::Tabard],
+            InventoryType::Robe => &[ItemSlot::Chest],
+            InventoryType::WeaponMainHand => &[ItemSlot::MainHand],
+            InventoryType::WeaponOffHand => &[ItemSlot::OffHand],
+            InventoryType::Holdable => &[ItemSlot::OffHand],
+            InventoryType::Ammo => &[ItemSlot::RangedOrRelic],
+            InventoryType::Thrown => &[ItemSlot::RangedOrRelic],
+            InventoryType::RangedRight => &[ItemSlot::RangedOrRelic],
+            InventoryType::Quiver => &[ItemSlot::RangedOrRelic],
+            InventoryType::Relic => &[ItemSlot::RangedOrRelic],
+        }
     }
 }

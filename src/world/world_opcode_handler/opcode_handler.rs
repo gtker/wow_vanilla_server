@@ -8,10 +8,11 @@ use crate::world::world_opcode_handler::{
     gm_command, send_movement_to_clients, send_to_all, write_client_test,
 };
 use std::time::SystemTime;
+use wow_items::vanilla::InventoryType;
 use wow_world_base::combat::UNARMED_SPEED;
 use wow_world_base::vanilla::position::{position_from_str, Position};
 use wow_world_base::vanilla::trigger::Trigger;
-use wow_world_base::vanilla::{CreatureFamily, Guid, HitInfo};
+use wow_world_base::vanilla::{CreatureFamily, Guid, HitInfo, ItemSlot};
 use wow_world_messages::vanilla::opcodes::ClientOpcodeMessage;
 use wow_world_messages::vanilla::{
     item_to_name_query_response, item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed,
@@ -23,11 +24,12 @@ use wow_world_messages::vanilla::{
     MSG_MOVE_START_SWIM_Server, MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server,
     MSG_MOVE_STOP_PITCH_Server, MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server,
     MSG_MOVE_STOP_Server, MSG_MOVE_STOP_TURN_Server, Object, Object_UpdateType,
-    SMSG_CREATURE_QUERY_RESPONSE_found, UpdateMask, UpdatePlayerBuilder, VisibleItem,
-    VisibleItemIndex, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP,
-    SMSG_CREATURE_QUERY_RESPONSE, SMSG_EMOTE, SMSG_ITEM_QUERY_SINGLE_RESPONSE,
-    SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG,
-    SMSG_QUERY_TIME_RESPONSE, SMSG_TEXT_EMOTE, SMSG_UPDATE_OBJECT,
+    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult, UpdateMask,
+    UpdatePlayerBuilder, VisibleItem, VisibleItemIndex, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART,
+    SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE, SMSG_EMOTE, SMSG_INVENTORY_CHANGE_FAILURE,
+    SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
+    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE, SMSG_TEXT_EMOTE,
+    SMSG_UPDATE_OBJECT,
 };
 
 pub(super) async fn handle_opcodes(
@@ -401,6 +403,11 @@ pub(super) async fn handle_opcodes(
             )
             .await
         }
+        ClientOpcodeMessage::CMSG_AUTOEQUIP_ITEM(c) => {
+            // TODO: source_bag?
+            let source_slot = ItemSlot::try_from(c.source_slot as u8).unwrap();
+            handle_autoequip_item(guid, client, entities, source_slot).await;
+        }
         ClientOpcodeMessage::CMSG_MOVE_FALL_RESET(_) => {}
         ClientOpcodeMessage::CMSG_PING(c) => {
             client
@@ -500,6 +507,103 @@ pub(super) async fn handle_opcodes(
         }
         v => {
             write_client_test(&v);
+        }
+    }
+}
+
+async fn handle_autoequip_item(
+    guid: Guid,
+    client: &mut Client,
+    entities: &mut Entities<'_>,
+    source_slot: ItemSlot,
+) {
+    let Some(source_inventory_type) = client.character().inventory.get_inventory_type(source_slot)
+    else {
+        // No item found in the source slot
+        client
+            .send_message(SMSG_INVENTORY_CHANGE_FAILURE {
+                result: SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult::SlotIsEmpty {
+                    bag_type_subclass: 0,
+                    item1: Guid::zero(),
+                    item2: Guid::zero(),
+                },
+            })
+            .await;
+        return;
+    };
+
+    // Handle the special case, where two items might need to be unequipped
+    if source_inventory_type == InventoryType::TwoHandedWeapon {
+        // Make sure to unequip the off-hand
+        if client.character().inventory.is_occupied(ItemSlot::OffHand) {
+            let Some(free_slot) = client.character().inventory.get_first_free_slot() else {
+                // No free slot available for the off hand
+                let source_item = client.character().inventory.get(source_slot).unwrap();
+
+                client
+                    .send_message(SMSG_INVENTORY_CHANGE_FAILURE {
+                        result: SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult::InventoryFull {
+                            bag_type_subclass: 0,
+                            item1: source_item.guid,
+                            item2: Guid::zero(),
+                        },
+                    })
+                    .await;
+                return;
+            };
+            handle_swap_inventory_item(guid, client, entities, ItemSlot::OffHand, free_slot).await;
+        }
+    }
+
+    let mut equipment_slot = None;
+
+    let equipment_slots = client
+        .character()
+        .inventory
+        .get_equipment_slots(source_inventory_type);
+
+    // Look for a free slot first
+    for slot in equipment_slots.iter().copied() {
+        if client.character().inventory.is_free(slot) {
+            equipment_slot.replace(slot);
+        }
+    }
+
+    // If no free slot was found, use the first available slot
+    if equipment_slot.is_none() {
+        equipment_slot = equipment_slots.first().copied();
+    }
+
+    let Some(destination_slot) = equipment_slot else {
+        // No destination slot available
+        let source_item = client.character().inventory.get(source_slot).unwrap();
+        client
+            .send_message(SMSG_INVENTORY_CHANGE_FAILURE {
+                result: SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult::NoEquipmentSlotAvailable {
+                    bag_type_subclass: 0,
+                    item1: source_item.guid,
+                    item2: Guid::zero(),
+                },
+            })
+            .await;
+        return;
+    };
+
+    handle_swap_inventory_item(guid, client, entities, source_slot, destination_slot).await;
+
+    // Special case for off-hand weapons, where a two-handed weapon might need to be unequipped
+    if destination_slot == ItemSlot::OffHand {
+        if client
+            .character()
+            .inventory
+            .get_inventory_type(ItemSlot::MainHand)
+            == Some(InventoryType::TwoHandedWeapon)
+        {
+            // This must be free, since it would be impossible for a two-handed weapon to be equipped
+            // together with an off-hand.
+            assert!(client.character().inventory.is_free(source_slot));
+            handle_swap_inventory_item(guid, client, entities, ItemSlot::MainHand, source_slot)
+                .await;
         }
     }
 }

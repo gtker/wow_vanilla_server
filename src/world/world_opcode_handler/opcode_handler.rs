@@ -25,11 +25,11 @@ use wow_world_messages::vanilla::{
     MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server, MSG_MOVE_STOP_PITCH_Server,
     MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server, MSG_MOVE_STOP_Server,
     MSG_MOVE_STOP_TURN_Server, Object, SMSG_CREATURE_QUERY_RESPONSE_found, UpdateMask,
-    UpdatePlayerBuilder, VisibleItem, VisibleItemIndex, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART,
-    SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE, SMSG_EMOTE, SMSG_INVENTORY_CHANGE_FAILURE,
-    SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
-    SMSG_NAME_QUERY_RESPONSE, SMSG_PONG, SMSG_QUERY_TIME_RESPONSE, SMSG_TEXT_EMOTE,
-    SMSG_UPDATE_OBJECT,
+    UpdatePlayerBuilder, VisibleItem, VisibleItemIndex, WhoPlayer, CMSG_WHO,
+    SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART, SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE,
+    SMSG_EMOTE, SMSG_INVENTORY_CHANGE_FAILURE, SMSG_ITEM_QUERY_SINGLE_RESPONSE,
+    SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE, SMSG_NAME_QUERY_RESPONSE, SMSG_PONG,
+    SMSG_QUERY_TIME_RESPONSE, SMSG_TEXT_EMOTE, SMSG_UPDATE_OBJECT, SMSG_WHO,
 };
 
 pub(super) async fn handle_opcodes(
@@ -511,6 +511,9 @@ pub(super) async fn handle_opcodes(
             )
             .await;
         }
+        ClientOpcodeMessage::CMSG_WHO(c) => {
+            handle_who(client, entities.clients(), *c).await;
+        }
         v => {
             write_client_test(&v);
         }
@@ -667,4 +670,37 @@ async fn handle_swap_inventory_item(
         entities.clients(),
     )
     .await;
+}
+
+async fn handle_who(client: &mut Client, clients: &[Client], msg: CMSG_WHO) {
+    let mut characters = vec![];
+    characters.push(client.character());
+    characters.extend(clients.iter().map(|c| c.character()));
+
+    let players: Vec<WhoPlayer> = characters
+        .into_iter()
+        .filter(|c| c.race_class.class().as_int() & msg.class_mask as u8 != 0)
+        .filter(|c| {
+            wow_world_base::vanilla::Race::from(c.race_class.race()).as_int() & msg.race_mask as u8
+                != 0
+        })
+        .filter(|c| c.level >= msg.minimum_level)
+        .filter(|c| c.level <= msg.maximum_level)
+        .filter(|c| c.name.contains(&msg.player_name))
+        .filter(|c| {
+            if msg.zones.is_empty() {
+                true
+            } else {
+                msg.zones.contains(&c.area.as_int())
+            }
+        })
+        .map(wow_world_messages::vanilla::WhoPlayer::from)
+        .collect();
+
+    client
+        .send_message(SMSG_WHO {
+            online_players: players.len() as _,
+            players,
+        })
+        .await;
 }

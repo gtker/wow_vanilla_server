@@ -5,7 +5,7 @@ use wow_world_base::movement::DEFAULT_RUNNING_SPEED;
 use wow_world_base::stats::BaseStats;
 use wow_world_base::stats::{calculate_health, calculate_mana};
 use wow_world_base::vanilla::{Level, Map, PlayerGender, RaceClass, Vector3d};
-use wow_world_messages::vanilla::{Area, CreatureFamily, MovementInfo, Power};
+use wow_world_messages::vanilla::{Area, CreatureFamily, MovementInfo, Power, WhoPlayer};
 use wow_world_messages::Guid;
 
 #[derive(Debug, Clone)]
@@ -175,5 +175,18 @@ impl Eq for Character {}
 impl PartialEq for Character {
     fn eq(&self, other: &Self) -> bool {
         self.guid == other.guid
+    }
+}
+
+impl From<&Character> for WhoPlayer {
+    fn from(e: &Character) -> Self {
+        Self {
+            name: e.name.clone(),
+            guild: "".to_string(),
+            level: e.level,
+            class: e.race_class.class(),
+            race: e.race_class.race().into(),
+            area: e.area,
+        }
     }
 }

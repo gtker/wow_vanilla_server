@@ -7,10 +7,10 @@ edition = "2021"
 
 [dependencies]
 tokio = {version = "1.38.2", features = ["full"]}
-wow_login_messages = { git = "https://github.com/gtker/wow_messages.git", rev = "d30a0aea8213e963534c638c8166cae0d36e9f9f", features = ["tokio"] }
-wow_world_messages = { git = "https://github.com/gtker/wow_messages.git", rev = "d30a0aea8213e963534c638c8166cae0d36e9f9f", features = ["tokio", "vanilla", "print-testcase"] }
-wow_world_base = { git = "https://github.com/gtker/wow_messages.git", rev = "d30a0aea8213e963534c638c8166cae0d36e9f9f", features = ["extended", "vanilla"] }
-wow_items = { git = "https://github.com/gtker/wow_messages.git", rev = "d30a0aea8213e963534c638c8166cae0d36e9f9f", features = ["vanilla"] }
+wow_login_messages = { git = "https://github.com/gtker/wow_messages.git", rev = "fa60daf84efcca13dafe544446f7d8dd70a77fd2", features = ["tokio"] }
+wow_world_messages = { git = "https://github.com/gtker/wow_messages.git", rev = "fa60daf84efcca13dafe544446f7d8dd70a77fd2", features = ["tokio", "vanilla", "print-testcase"] }
+wow_world_base = { git = "https://github.com/gtker/wow_messages.git", rev = "fa60daf84efcca13dafe544446f7d8dd70a77fd2", features = ["extended", "vanilla"] }
+wow_items = { git = "https://github.com/gtker/wow_messages.git", rev = "fa60daf84efcca13dafe544446f7d8dd70a77fd2", features = ["vanilla"] }
 
 #wow_login_messages = { path = "../wow_messages/wow_login_messages", features = ["tokio"] }
 #wow_world_messages = { path = "../wow_messages/wow_world_messages", features = ["tokio", "vanilla", "print-testcase"] }
@@ -20,5 +20,5 @@ wow_items = { git = "https://github.com/gtker/wow_messages.git", rev = "d30a0aea
 wow_srp = "0.7.0"
 walkdir = "2.3.3"
 
-#namigator = { git = "https://github.com/gtker/namigator-rs.git", rev = "bf9d8d2c36b94011780b4bd3c2fa1896e70ffdb5", features = ["vanilla"] }
-namigator = { git = "https://github.com/Fahien/namigator-rs.git", rev = "9ea6f5c00fcf3fbdc943cc7ae74fb5febf6341d5", features = ["vanilla"] }
+namigator = { git = "https://github.com/gtker/namigator-rs.git", rev = "d73362c21cc2634129ad369b7dc0917b5c122d7c", features = ["vanilla"] }
+#namigator = { path = "../namigator-rs/namigator", features = ["vanilla"] }

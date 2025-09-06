@@ -258,7 +258,7 @@ dependencies = [
 [[package]]
 name = "namigator"
 version = "0.1.0"
-source = "git+https://github.com/Fahien/namigator-rs.git?rev=9ea6f5c00fcf3fbdc943cc7ae74fb5febf6341d5#9ea6f5c00fcf3fbdc943cc7ae74fb5febf6341d5"
+source = "git+https://github.com/gtker/namigator-rs.git?rev=d73362c21cc2634129ad369b7dc0917b5c122d7c#d73362c21cc2634129ad369b7dc0917b5c122d7c"
 dependencies = [
  "namigator-sys",
  "wow_world_base",
@@ -267,7 +267,7 @@ dependencies = [
 [[package]]
 name = "namigator-sys"
 version = "0.2.0"
-source = "git+https://github.com/Fahien/namigator-rs.git?rev=9ea6f5c00fcf3fbdc943cc7ae74fb5febf6341d5#9ea6f5c00fcf3fbdc943cc7ae74fb5febf6341d5"
+source = "git+https://github.com/gtker/namigator-rs.git?rev=d73362c21cc2634129ad369b7dc0917b5c122d7c#d73362c21cc2634129ad369b7dc0917b5c122d7c"
 dependencies = [
  "cc",
 ]
@@ -753,7 +753,7 @@ checksum = "5c573471f125075647d03df72e026074b7203790d41351cd6edc96f46bcccd36"
 [[package]]
 name = "wow_items"
 version = "0.2.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=d30a0aea8213e963534c638c8166cae0d36e9f9f#d30a0aea8213e963534c638c8166cae0d36e9f9f"
+source = "git+https://github.com/gtker/wow_messages.git?rev=fa60daf84efcca13dafe544446f7d8dd70a77fd2#fa60daf84efcca13dafe544446f7d8dd70a77fd2"
 dependencies = [
  "wow_world_base",
 ]
@@ -761,7 +761,7 @@ dependencies = [
 [[package]]
 name = "wow_login_messages"
 version = "0.5.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=d30a0aea8213e963534c638c8166cae0d36e9f9f#d30a0aea8213e963534c638c8166cae0d36e9f9f"
+source = "git+https://github.com/gtker/wow_messages.git?rev=fa60daf84efcca13dafe544446f7d8dd70a77fd2#fa60daf84efcca13dafe544446f7d8dd70a77fd2"
 dependencies = [
  "tokio",
 ]
@@ -795,12 +795,12 @@ dependencies = [
 [[package]]
 name = "wow_world_base"
 version = "0.3.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=d30a0aea8213e963534c638c8166cae0d36e9f9f#d30a0aea8213e963534c638c8166cae0d36e9f9f"
+source = "git+https://github.com/gtker/wow_messages.git?rev=fa60daf84efcca13dafe544446f7d8dd70a77fd2#fa60daf84efcca13dafe544446f7d8dd70a77fd2"
 
 [[package]]
 name = "wow_world_messages"
 version = "0.3.0"
-source = "git+https://github.com/gtker/wow_messages.git?rev=d30a0aea8213e963534c638c8166cae0d36e9f9f#d30a0aea8213e963534c638c8166cae0d36e9f9f"
+source = "git+https://github.com/gtker/wow_messages.git?rev=fa60daf84efcca13dafe544446f7d8dd70a77fd2#fa60daf84efcca13dafe544446f7d8dd70a77fd2"
 dependencies = [
  "flate2",
  "tokio",

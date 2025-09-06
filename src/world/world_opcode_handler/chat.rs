@@ -23,6 +23,10 @@ pub async fn handle_message(client: &mut Client, clients: &mut [Client], m: CMSG
                 false
             }
         },
+        CMSG_MESSAGECHAT_ChatType::Whisper { target_player } => {
+            whisper(client, clients, target_player, m.message.clone()).await;
+            return;
+        }
         _ => {
             dbg!(m);
             return;
@@ -54,5 +58,45 @@ pub async fn handle_message(client: &mut Client, clients: &mut [Client], m: CMSG
         if f(client, c) {
             c.send_message(message.clone()).await;
         }
+    }
+}
+
+async fn whisper(
+    sender: &mut Client,
+    clients: &mut [Client],
+    target_player: String,
+    message: String,
+) {
+    if sender.character().name.eq_ignore_ascii_case(&target_player) {
+        sender
+            .send_system_message("You cannot whisper to yourself.")
+            .await;
+        return;
+    }
+
+    let target = clients
+        .iter_mut()
+        .find(|c| c.character().name.eq_ignore_ascii_case(&target_player));
+
+    if let Some(target) = target {
+        let inform = SMSG_MESSAGECHAT {
+            chat_type: SMSG_MESSAGECHAT_ChatType::WhisperInform {
+                sender2: target.character().guid,
+            },
+            language: Language::Universal,
+            message: message.clone(),
+            tag: PlayerChatTag::None,
+        };
+        sender.send_message(inform).await;
+
+        let whisper = SMSG_MESSAGECHAT {
+            chat_type: SMSG_MESSAGECHAT_ChatType::Whisper {
+                sender2: sender.character().guid,
+            },
+            language: Language::Universal,
+            message,
+            tag: PlayerChatTag::None,
+        };
+        target.send_message(whisper).await;
     }
 }

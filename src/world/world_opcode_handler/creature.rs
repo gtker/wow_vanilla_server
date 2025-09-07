@@ -4,7 +4,7 @@ use wow_world_base::vanilla::Map;
 use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
     MovementBlock, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living, MovementInfo, Object,
-    ObjectType, Object_UpdateType, UpdateUnitBuilder, Vector3d, SMSG_UPDATE_OBJECT,
+    ObjectType, UpdateUnitBuilder, Vector3d, SMSG_UPDATE_OBJECT,
 };
 use wow_world_messages::Guid;
 
@@ -59,40 +59,38 @@ impl Creature {
     pub fn to_message(&self) -> SMSG_UPDATE_OBJECT {
         SMSG_UPDATE_OBJECT {
             has_transport: 0,
-            objects: vec![Object {
-                update_type: Object_UpdateType::CreateObject2 {
-                    guid3: self.guid,
-                    mask2: UpdateMask::Unit(
-                        UpdateUnitBuilder::new()
-                            .set_unit_health(100)
-                            .set_unit_maxhealth(100)
-                            .set_object_guid(self.guid)
-                            .set_unit_displayid(self.display_id.into())
-                            .set_object_scale_x(1.0)
-                            .set_unit_level(self.level.into())
-                            .set_unit_factiontemplate(self.faction_template as i32)
-                            .set_object_entry(self.entry as i32)
-                            .finalize(),
+            objects: vec![Object::CreateObject2 {
+                guid3: self.guid,
+                mask2: UpdateMask::Unit(
+                    UpdateUnitBuilder::new()
+                        .set_unit_health(100)
+                        .set_unit_maxhealth(100)
+                        .set_object_guid(self.guid)
+                        .set_unit_displayid(self.display_id.into())
+                        .set_object_scale_x(1.0)
+                        .set_unit_level(self.level.into())
+                        .set_unit_factiontemplate(self.faction_template as i32)
+                        .set_object_entry(self.entry as i32)
+                        .finalize(),
+                ),
+                movement2: MovementBlock {
+                    update_flag: MovementBlock_UpdateFlag::new_living(
+                        MovementBlock_UpdateFlag_Living::Living {
+                            backwards_running_speed: 0.0,
+                            backwards_swimming_speed: 0.0,
+                            fall_time: 0.0,
+                            flags: Default::default(),
+                            living_orientation: 0.0,
+                            living_position: self.info.position,
+                            running_speed: DEFAULT_RUNNING_SPEED,
+                            swimming_speed: 0.0,
+                            timestamp: 0,
+                            turn_rate: DEFAULT_TURN_SPEED,
+                            walking_speed: DEFAULT_WALKING_SPEED,
+                        },
                     ),
-                    movement2: MovementBlock {
-                        update_flag: MovementBlock_UpdateFlag::new_living(
-                            MovementBlock_UpdateFlag_Living::Living {
-                                backwards_running_speed: 0.0,
-                                backwards_swimming_speed: 0.0,
-                                fall_time: 0.0,
-                                flags: Default::default(),
-                                living_orientation: 0.0,
-                                living_position: self.info.position,
-                                running_speed: DEFAULT_RUNNING_SPEED,
-                                swimming_speed: 0.0,
-                                timestamp: 0,
-                                turn_rate: DEFAULT_TURN_SPEED,
-                                walking_speed: DEFAULT_WALKING_SPEED,
-                            },
-                        ),
-                    },
-                    object_type: ObjectType::Unit,
                 },
+                object_type: ObjectType::Unit,
             }],
         }
     }

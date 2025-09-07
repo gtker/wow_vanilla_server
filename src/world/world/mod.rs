@@ -21,7 +21,7 @@ use wow_world_messages::vanilla::UpdateMask;
 use wow_world_messages::vanilla::{
     DamageInfo, InitialSpell, Language, MSG_MOVE_TELEPORT_ACK_Server, MovementBlock,
     MovementBlock_MovementFlags, MovementBlock_UpdateFlag, MovementBlock_UpdateFlag_Living,
-    MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, Object_UpdateType, PlayerChatTag,
+    MovementInfo, MovementInfo_MovementFlags, Object, ObjectType, PlayerChatTag,
     SMSG_MESSAGECHAT_ChatType, SkillInfo, SkillInfoIndex, UpdatePlayerBuilder, Vector3d,
     VisibleItem, VisibleItemIndex, SMSG_ACCOUNT_DATA_TIMES, SMSG_ATTACKERSTATEUPDATE,
     SMSG_DESTROY_OBJECT, SMSG_INITIAL_SPELLS, SMSG_LOGIN_SETTIMESPEED, SMSG_LOGIN_VERIFY_WORLD,
@@ -173,8 +173,8 @@ impl World {
 pub fn get_self_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OBJECT {
     let mut m = get_update_object_create_object2(character);
 
-    match &mut m.objects[0].update_type {
-        Object_UpdateType::CreateObject2 { movement2, .. } => {
+    match &mut m.objects[0] {
+        Object::CreateObject2 { movement2, .. } => {
             movement2.update_flag = movement2.update_flag.clone().set_self();
         }
         _ => unreachable!(),
@@ -186,29 +186,27 @@ pub fn get_self_update_object_create_object2(character: &Character) -> SMSG_UPDA
 pub fn get_update_object_create_object2(character: &Character) -> SMSG_UPDATE_OBJECT {
     SMSG_UPDATE_OBJECT {
         has_transport: 0,
-        objects: vec![Object {
-            update_type: Object_UpdateType::CreateObject2 {
-                guid3: character.guid,
-                mask2: get_update_object_player(character),
-                movement2: MovementBlock {
-                    update_flag: MovementBlock_UpdateFlag::new_living(
-                        MovementBlock_UpdateFlag_Living::Living {
-                            backwards_running_speed: DEFAULT_RUNNING_BACKWARDS_SPEED,
-                            backwards_swimming_speed: 0.0,
-                            fall_time: 0.0,
-                            flags: MovementBlock_MovementFlags::empty(),
-                            living_orientation: character.info.orientation,
-                            living_position: character.info.position,
-                            running_speed: character.movement_speed,
-                            swimming_speed: 0.0,
-                            timestamp: 0,
-                            turn_rate: DEFAULT_TURN_SPEED,
-                            walking_speed: DEFAULT_WALKING_SPEED,
-                        },
-                    ),
-                },
-                object_type: ObjectType::Player,
+        objects: vec![Object::CreateObject2 {
+            guid3: character.guid,
+            mask2: get_update_object_player(character),
+            movement2: MovementBlock {
+                update_flag: MovementBlock_UpdateFlag::new_living(
+                    MovementBlock_UpdateFlag_Living::Living {
+                        backwards_running_speed: DEFAULT_RUNNING_BACKWARDS_SPEED,
+                        backwards_swimming_speed: 0.0,
+                        fall_time: 0.0,
+                        flags: MovementBlock_MovementFlags::empty(),
+                        living_orientation: character.info.orientation,
+                        living_position: character.info.position,
+                        running_speed: character.movement_speed,
+                        swimming_speed: 0.0,
+                        timestamp: 0,
+                        turn_rate: DEFAULT_TURN_SPEED,
+                        walking_speed: DEFAULT_WALKING_SPEED,
+                    },
+                ),
             },
+            object_type: ObjectType::Player,
         }],
     }
 }
@@ -305,35 +303,37 @@ pub fn get_client_login_messages(character: &Character) -> Vec<ServerOpcodeMessa
         },
     ));
 
-    v.push(ServerOpcodeMessage::SMSG_LOGIN_VERIFY_WORLD(
+    v.push(ServerOpcodeMessage::SMSG_LOGIN_VERIFY_WORLD(Box::new(
         SMSG_LOGIN_VERIFY_WORLD {
             map: character.map,
             position: character.info.position,
             orientation: character.info.orientation,
         },
-    ));
+    )));
 
-    v.push(ServerOpcodeMessage::SMSG_ACCOUNT_DATA_TIMES(
+    v.push(ServerOpcodeMessage::SMSG_ACCOUNT_DATA_TIMES(Box::new(
         SMSG_ACCOUNT_DATA_TIMES { data: [0; 32] },
-    ));
+    )));
 
-    v.push(ServerOpcodeMessage::SMSG_TUTORIAL_FLAGS(
+    v.push(ServerOpcodeMessage::SMSG_TUTORIAL_FLAGS(Box::new(
         SMSG_TUTORIAL_FLAGS {
             tutorial_data: [
                 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
                 0xFFFFFFFF,
             ],
         },
-    ));
+    )));
 
-    v.push(ServerOpcodeMessage::SMSG_MESSAGECHAT(SMSG_MESSAGECHAT {
-        chat_type: SMSG_MESSAGECHAT_ChatType::System {
-            sender2: Guid::zero(),
+    v.push(ServerOpcodeMessage::SMSG_MESSAGECHAT(Box::new(
+        SMSG_MESSAGECHAT {
+            chat_type: SMSG_MESSAGECHAT_ChatType::System {
+                sender2: Guid::zero(),
+            },
+            language: Language::Universal,
+            message: "Patch 1.12: Whatever is now live!".to_string(),
+            tag: PlayerChatTag::None,
         },
-        language: Language::Universal,
-        message: "Patch 3.3.5: Whatever is now live!".to_string(),
-        tag: PlayerChatTag::None,
-    }));
+    )));
 
     v.push(
         SMSG_INITIAL_SPELLS {

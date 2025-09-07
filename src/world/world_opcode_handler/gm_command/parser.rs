@@ -1,10 +1,10 @@
 use crate::world::world::client::Client;
 use crate::world::world_opcode_handler::entities::{Entities, Entity};
-use wow_items::vanilla::{lookup_item, lookup_item_by_name};
+use wow_items::vanilla::{lookup_item, lookup_item_by_name, Item};
 use wow_world_base::geometry::trace_point_2d;
 use wow_world_base::shared::Guid;
 use wow_world_base::vanilla::position::{position_from_str, Position};
-use wow_world_base::vanilla::{Item, Map, Vector2d};
+use wow_world_base::vanilla::{Map, Vector2d};
 
 pub(crate) enum GmCommand {
     WhereAmI,

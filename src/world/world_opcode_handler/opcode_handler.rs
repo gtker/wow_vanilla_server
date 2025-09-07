@@ -4,6 +4,7 @@ use crate::world::world::pathfinding_maps::PathfindingMaps;
 use crate::world::world::{announce_character_login, get_client_login_messages, prepare_teleport};
 use crate::world::world_opcode_handler::chat::handle_message;
 use crate::world::world_opcode_handler::entities::Entities;
+use crate::world::world_opcode_handler::item::messages;
 use crate::world::world_opcode_handler::{
     gm_command, send_movement_to_clients, send_to_all, write_client_test,
 };
@@ -15,16 +16,15 @@ use wow_world_base::vanilla::trigger::Trigger;
 use wow_world_base::vanilla::{CreatureFamily, Guid, HitInfo, ItemSlot};
 use wow_world_messages::vanilla::opcodes::ClientOpcodeMessage;
 use wow_world_messages::vanilla::{
-    item_to_name_query_response, item_to_query_response, DamageInfo, LogoutResult, LogoutSpeed,
-    MSG_MOVE_FALL_LAND_Server, MSG_MOVE_HEARTBEAT_Server, MSG_MOVE_JUMP_Server,
-    MSG_MOVE_SET_FACING_Server, MSG_MOVE_SET_PITCH_Server, MSG_MOVE_SET_RUN_MODE_Server,
-    MSG_MOVE_SET_WALK_MODE_Server, MSG_MOVE_START_BACKWARD_Server, MSG_MOVE_START_FORWARD_Server,
-    MSG_MOVE_START_PITCH_DOWN_Server, MSG_MOVE_START_PITCH_UP_Server,
-    MSG_MOVE_START_STRAFE_LEFT_Server, MSG_MOVE_START_STRAFE_RIGHT_Server,
-    MSG_MOVE_START_SWIM_Server, MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server,
-    MSG_MOVE_STOP_PITCH_Server, MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server,
-    MSG_MOVE_STOP_Server, MSG_MOVE_STOP_TURN_Server, Object, Object_UpdateType,
-    SMSG_CREATURE_QUERY_RESPONSE_found, SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult, UpdateMask,
+    DamageInfo, LogoutResult, LogoutSpeed, MSG_MOVE_FALL_LAND_Server, MSG_MOVE_HEARTBEAT_Server,
+    MSG_MOVE_JUMP_Server, MSG_MOVE_SET_FACING_Server, MSG_MOVE_SET_PITCH_Server,
+    MSG_MOVE_SET_RUN_MODE_Server, MSG_MOVE_SET_WALK_MODE_Server, MSG_MOVE_START_BACKWARD_Server,
+    MSG_MOVE_START_FORWARD_Server, MSG_MOVE_START_PITCH_DOWN_Server,
+    MSG_MOVE_START_PITCH_UP_Server, MSG_MOVE_START_STRAFE_LEFT_Server,
+    MSG_MOVE_START_STRAFE_RIGHT_Server, MSG_MOVE_START_SWIM_Server,
+    MSG_MOVE_START_TURN_LEFT_Server, MSG_MOVE_START_TURN_RIGHT_Server, MSG_MOVE_STOP_PITCH_Server,
+    MSG_MOVE_STOP_STRAFE_Server, MSG_MOVE_STOP_SWIM_Server, MSG_MOVE_STOP_Server,
+    MSG_MOVE_STOP_TURN_Server, Object, SMSG_CREATURE_QUERY_RESPONSE_found, UpdateMask,
     UpdatePlayerBuilder, VisibleItem, VisibleItemIndex, SMSG_ATTACKERSTATEUPDATE, SMSG_ATTACKSTART,
     SMSG_ATTACKSTOP, SMSG_CREATURE_QUERY_RESPONSE, SMSG_EMOTE, SMSG_INVENTORY_CHANGE_FAILURE,
     SMSG_ITEM_QUERY_SINGLE_RESPONSE, SMSG_LOGOUT_COMPLETE, SMSG_LOGOUT_RESPONSE,
@@ -99,7 +99,9 @@ pub(super) async fn handle_opcodes(
                 }
                 Some(item) => {
                     println!("Sending response for {}", item.name());
-                    client.send_message(item_to_query_response(item)).await;
+                    client
+                        .send_message(messages::item_to_query_response(item))
+                        .await;
                 }
             }
         }
@@ -107,7 +109,11 @@ pub(super) async fn handle_opcodes(
             let item = wow_items::vanilla::lookup_item(c.item);
             match item {
                 None => {}
-                Some(item) => client.send_message(item_to_name_query_response(item)).await,
+                Some(item) => {
+                    client
+                        .send_message(messages::item_to_name_query_response(item))
+                        .await
+                }
             }
         }
 
@@ -206,7 +212,7 @@ pub(super) async fn handle_opcodes(
                 return;
             }
 
-            handle_message(client, entities.clients(), c).await;
+            handle_message(client, entities.clients(), *c).await;
         }
         ClientOpcodeMessage::CMSG_LOGOUT_REQUEST => {
             client
@@ -521,12 +527,10 @@ async fn handle_autoequip_item(
     else {
         // No item found in the source slot
         client
-            .send_message(SMSG_INVENTORY_CHANGE_FAILURE {
-                result: SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult::SlotIsEmpty {
-                    bag_type_subclass: 0,
-                    item1: Guid::zero(),
-                    item2: Guid::zero(),
-                },
+            .send_message(SMSG_INVENTORY_CHANGE_FAILURE::SlotIsEmpty {
+                bag_type_subclass: 0,
+                item1: Guid::zero(),
+                item2: Guid::zero(),
             })
             .await;
         return;
@@ -541,12 +545,10 @@ async fn handle_autoequip_item(
                 let source_item = client.character().inventory.get(source_slot).unwrap();
 
                 client
-                    .send_message(SMSG_INVENTORY_CHANGE_FAILURE {
-                        result: SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult::InventoryFull {
-                            bag_type_subclass: 0,
-                            item1: source_item.guid,
-                            item2: Guid::zero(),
-                        },
+                    .send_message(SMSG_INVENTORY_CHANGE_FAILURE::InventoryFull {
+                        bag_type_subclass: 0,
+                        item1: source_item.guid,
+                        item2: Guid::zero(),
                     })
                     .await;
                 return;
@@ -578,12 +580,10 @@ async fn handle_autoequip_item(
         // No destination slot available
         let source_item = client.character().inventory.get(source_slot).unwrap();
         client
-            .send_message(SMSG_INVENTORY_CHANGE_FAILURE {
-                result: SMSG_INVENTORY_CHANGE_FAILURE_InventoryResult::NoEquipmentSlotAvailable {
-                    bag_type_subclass: 0,
-                    item1: source_item.guid,
-                    item2: Guid::zero(),
-                },
+            .send_message(SMSG_INVENTORY_CHANGE_FAILURE::NoEquipmentSlotAvailable {
+                bag_type_subclass: 0,
+                item1: source_item.guid,
+                item2: Guid::zero(),
             })
             .await;
         return;
@@ -658,11 +658,9 @@ async fn handle_swap_inventory_item(
     send_to_all(
         SMSG_UPDATE_OBJECT {
             has_transport: 0,
-            objects: vec![Object {
-                update_type: Object_UpdateType::Values {
-                    guid1: guid,
-                    mask1: UpdateMask::Player(player.finalize()),
-                },
+            objects: vec![Object::Values {
+                guid1: guid,
+                mask1: UpdateMask::Player(player.finalize()),
             }],
         },
         client,

@@ -91,12 +91,10 @@ async fn character_screen(
         )
         .unwrap();
 
-    SMSG_AUTH_RESPONSE {
-        result: SMSG_AUTH_RESPONSE_WorldResult::AuthOk {
-            billing_flags: 0,
-            billing_rested: 0,
-            billing_time: 0,
-        },
+    SMSG_AUTH_RESPONSE::AuthOk {
+        billing_flags: 0,
+        billing_rested: 0,
+        billing_time: 0,
     }
     .tokio_write_encrypted_server(&mut stream, encryption.encrypter())
     .await

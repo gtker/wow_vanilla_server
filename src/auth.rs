@@ -9,7 +9,7 @@ use wow_login_messages::errors::ExpectedOpcodeError;
 use wow_login_messages::helper::{
     tokio_expect_client_message, tokio_read_initial_message, InitialMessage,
 };
-use wow_login_messages::ServerMessage;
+use wow_login_messages::Message;
 use wow_srp::normalized_string::NormalizedString;
 use wow_srp::server::{SrpProof, SrpServer, SrpVerifier};
 use wow_srp::{PublicKey, GENERATOR, LARGE_SAFE_PRIME_LITTLE_ENDIAN};
@@ -76,11 +76,9 @@ async fn reconnect_version_8(
         .unwrap()
         .reconnect_challenge_data();
 
-    CMD_AUTH_RECONNECT_CHALLENGE_Server {
-        result: CMD_AUTH_RECONNECT_CHALLENGE_Server_LoginResult::Success {
-            challenge_data: server_reconnect_challenge_data,
-            checksum_salt: [0; 16],
-        },
+    CMD_AUTH_RECONNECT_CHALLENGE_Server::Success {
+        challenge_data: server_reconnect_challenge_data,
+        checksum_salt: [0; 16],
     }
     .tokio_write(&mut stream)
     .await
@@ -134,11 +132,9 @@ async fn reconnect_version_2(
         .unwrap()
         .reconnect_challenge_data();
 
-    CMD_AUTH_RECONNECT_CHALLENGE_Server {
-        result: CMD_AUTH_RECONNECT_CHALLENGE_Server_LoginResult::Success {
-            challenge_data: server_reconnect_challenge_data,
-            checksum_salt: [0; 16],
-        },
+    CMD_AUTH_RECONNECT_CHALLENGE_Server::Success {
+        challenge_data: server_reconnect_challenge_data,
+        checksum_salt: [0; 16],
     }
     .tokio_write(&mut stream)
     .await
@@ -188,14 +184,12 @@ async fn login_version_2(
 
     let username = l.account_name;
 
-    CMD_AUTH_LOGON_CHALLENGE_Server {
-        result: CMD_AUTH_LOGON_CHALLENGE_Server_LoginResult::Success {
-            server_public_key: *p.server_public_key(),
-            generator: vec![GENERATOR],
-            large_safe_prime: LARGE_SAFE_PRIME_LITTLE_ENDIAN.into(),
-            salt: *p.salt(),
-            crc_salt: [0; 16],
-        },
+    CMD_AUTH_LOGON_CHALLENGE_Server::Success {
+        server_public_key: *p.server_public_key(),
+        generator: vec![GENERATOR],
+        large_safe_prime: LARGE_SAFE_PRIME_LITTLE_ENDIAN.into(),
+        salt: *p.salt(),
+        crc_salt: [0; 16],
     }
     .tokio_write(&mut stream)
     .await
@@ -213,11 +207,9 @@ async fn login_version_2(
         )
         .unwrap();
 
-    CMD_AUTH_LOGON_PROOF_Server {
-        result: CMD_AUTH_LOGON_PROOF_Server_LoginResult::Success {
-            server_proof: proof,
-            hardware_survey_id: 0,
-        },
+    CMD_AUTH_LOGON_PROOF_Server::Success {
+        server_proof: proof,
+        hardware_survey_id: 0,
     }
     .tokio_write(&mut stream)
     .await
@@ -246,15 +238,13 @@ async fn login_version_3(
     let p = get_proof(&l.account_name);
     let username = l.account_name;
 
-    CMD_AUTH_LOGON_CHALLENGE_Server {
-        result: CMD_AUTH_LOGON_CHALLENGE_Server_LoginResult::Success {
-            server_public_key: *p.server_public_key(),
-            generator: vec![GENERATOR],
-            large_safe_prime: LARGE_SAFE_PRIME_LITTLE_ENDIAN.into(),
-            salt: *p.salt(),
-            crc_salt: [0; 16],
-            security_flag: CMD_AUTH_LOGON_CHALLENGE_Server_SecurityFlag::None,
-        },
+    CMD_AUTH_LOGON_CHALLENGE_Server::Success {
+        server_public_key: *p.server_public_key(),
+        generator: vec![GENERATOR],
+        large_safe_prime: LARGE_SAFE_PRIME_LITTLE_ENDIAN.into(),
+        salt: *p.salt(),
+        crc_salt: [0; 16],
+        security_flag: CMD_AUTH_LOGON_CHALLENGE_Server_SecurityFlag::None,
     }
     .tokio_write(&mut stream)
     .await
@@ -272,11 +262,9 @@ async fn login_version_3(
         )
         .unwrap();
 
-    CMD_AUTH_LOGON_PROOF_Server {
-        result: CMD_AUTH_LOGON_PROOF_Server_LoginResult::Success {
-            server_proof: proof,
-            hardware_survey_id: 0,
-        },
+    CMD_AUTH_LOGON_PROOF_Server::Success {
+        server_proof: proof,
+        hardware_survey_id: 0,
     }
     .tokio_write(&mut stream)
     .await
@@ -298,15 +286,13 @@ async fn login_version_8(
     let p = get_proof(&l.account_name);
     let username = l.account_name;
 
-    CMD_AUTH_LOGON_CHALLENGE_Server {
-        result: CMD_AUTH_LOGON_CHALLENGE_Server_LoginResult::Success {
-            server_public_key: *p.server_public_key(),
-            generator: vec![GENERATOR],
-            large_safe_prime: LARGE_SAFE_PRIME_LITTLE_ENDIAN.into(),
-            salt: *p.salt(),
-            crc_salt: [0; 16],
-            security_flag: CMD_AUTH_LOGON_CHALLENGE_Server_SecurityFlag::empty(),
-        },
+    CMD_AUTH_LOGON_CHALLENGE_Server::Success {
+        server_public_key: *p.server_public_key(),
+        generator: vec![GENERATOR],
+        large_safe_prime: LARGE_SAFE_PRIME_LITTLE_ENDIAN.into(),
+        salt: *p.salt(),
+        crc_salt: [0; 16],
+        security_flag: CMD_AUTH_LOGON_CHALLENGE_Server_SecurityFlag::empty(),
     }
     .tokio_write(&mut stream)
     .await
@@ -324,13 +310,11 @@ async fn login_version_8(
         )
         .unwrap();
 
-    CMD_AUTH_LOGON_PROOF_Server {
-        result: CMD_AUTH_LOGON_PROOF_Server_LoginResult::Success {
-            account_flag: AccountFlag::empty(),
-            server_proof,
-            hardware_survey_id: 0,
-            unknown_flags: 0,
-        },
+    CMD_AUTH_LOGON_PROOF_Server::Success {
+        account_flag: AccountFlag::empty(),
+        server_proof,
+        hardware_survey_id: 0,
+        unknown: 0,
     }
     .tokio_write(&mut stream)
     .await
